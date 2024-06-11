@@ -29,6 +29,11 @@ const totalPage3TransitionFrames = 15; // Using frames 0000 to 0027
 const isPage3TransitionFinished = ref(false);
 const page3TransitionImageSrc = ref("");
 
+const page3IdleFrames = ref([]);
+const totalPage3IdleFrames = 32; // Using frames 0000 to 0031
+const page3IdleImageSrc = ref("");
+let page3IdleAnimationInterval = null;
+
 const preloadImages = async () => {
   const imagePromises = [];
   for (let i = 0; i < totalFrames; i++) {
@@ -258,16 +263,46 @@ const navigateToLocationPage = () => {
     if (page3FrameIndex >= totalPage3TransitionFrames) {
       clearInterval(page3AnimationInterval);
       isPage3TransitionFinished.value = true;
-      showLocationPage();
+      navigateToLocationIdlePage();
     }
   }, 80); // Adjust the interval duration (in milliseconds) to control the page 3 transition animation speed
 };
 
-const showLocationPage = () => {
-  setTimeout(() => {
-    console.log("Navigating to location page");
+const navigateToLocationIdlePage = () => {
+  const preloadPage3IdleImages = async () => {
+    const imagePromises = [];
+    for (let i = 0; i < totalPage3IdleFrames; i++) {
+      const imageModule = import(
+        `./assets/screenThree/page3_idle/Screen3idle_frame${i
+          .toString()
+          .padStart(4, "0")}.png`
+      );
+      imagePromises.push(imageModule);
+    }
+    try {
+      const loadedImages = await Promise.all(imagePromises);
+      page3IdleFrames.value = loadedImages.map((module) => module.default);
+    } catch (error) {
+      console.error("Error preloading page 3 idle images:", error);
+    }
+  };
+
+  preloadPage3IdleImages().then(() => {
     router.push("/location");
-  }, 300); // Adjust the delay as needed
+    startPage3IdleAnimation();
+  });
+};
+
+const startPage3IdleAnimation = () => {
+  let page3IdleFrameIndex = 0;
+  page3IdleAnimationInterval = setInterval(() => {
+    page3IdleImageSrc.value = page3IdleFrames.value[page3IdleFrameIndex];
+    page3IdleFrameIndex = (page3IdleFrameIndex + 1) % totalPage3IdleFrames;
+  }, 30); // Adjust the interval duration (in milliseconds) to control the page 3 idle animation speed
+};
+
+const stopPage3IdleAnimation = () => {
+  clearInterval(page3IdleAnimationInterval);
 };
 
 const preloadPage2OutTransitionImages = async () => {
@@ -379,9 +414,19 @@ watch(
         class="w-full h-full object-cover"
       />
     </div>
+    <div
+      v-if="$route.path === '/location'"
+      class="fixed top-0 left-0 w-full h-full"
+    >
+      <img
+        v-if="page3IdleImageSrc"
+        :src="page3IdleImageSrc"
+        alt="Page 3 Idle"
+        class="w-full h-full object-cover"
+      />
+    </div>
   </div>
 </template>
-
 <style>
 html,
 body {

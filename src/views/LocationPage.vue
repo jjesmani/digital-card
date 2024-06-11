@@ -18,6 +18,7 @@ const props = defineProps({
   },
 });
 </script>
+
 <style scoped>
 /* Add any page-specific styles here */
 </style>
