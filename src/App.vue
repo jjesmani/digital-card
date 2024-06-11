@@ -26,7 +26,9 @@ let page3IdleAnimationInterval = null;
 const preloadImages = async (path, totalFrames, step = 1) => {
   const imagePromises = [];
   for (let i = 0; i < totalFrames; i += step) {
-    const imageModule = import(`${path}${i.toString().padStart(4, "0")}.png`);
+    const imageModule = import(
+      /* @vite-ignore */ `${path}${i.toString().padStart(4, "0")}.png`
+    );
     imagePromises.push(imageModule);
   }
   try {
@@ -146,7 +148,7 @@ const navigateToLocationPage = async () => {
   page3IdleImageSrc.value = await startPage3IdleAnimation(
     "./assets/screenThree/SCREEN3_IDLE/screen3idle_frame",
     7,
-    100
+    0
   );
 };
 
