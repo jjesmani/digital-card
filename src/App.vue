@@ -24,6 +24,11 @@ const isPage2OutTransitionFinished = ref(false);
 const isPage2OutTransitioning = ref(false);
 let page2IdleAnimationInterval = null;
 
+const page3TransitionFrames = ref([]);
+const totalPage3TransitionFrames = 15; // Using frames 0000 to 0027
+const isPage3TransitionFinished = ref(false);
+const page3TransitionImageSrc = ref("");
+
 const preloadImages = async () => {
   const imagePromises = [];
   for (let i = 0; i < totalFrames; i++) {
@@ -222,7 +227,43 @@ const playPage2OutTransitionAnimation = () => {
   }, 80); // Adjust the interval duration (in milliseconds) to control page 2 out transition speed
 };
 
+const preloadPage3TransitionImages = async () => {
+  const imagePromises = [];
+  for (let i = 0; i < totalPage3TransitionFrames; i++) {
+    const imageModule = import(
+      `./assets/screenThree/page3_intransition/page3intransition_frame${i
+        .toString()
+        .padStart(4, "0")}.png`
+    );
+    imagePromises.push(imageModule);
+  }
+  try {
+    const loadedImages = await Promise.all(imagePromises);
+    page3TransitionFrames.value = loadedImages.map((module) => module.default);
+  } catch (error) {
+    console.error("Error preloading page 3 transition images:", error);
+  }
+};
+
+onMounted(async () => {
+  await preloadPage3TransitionImages();
+});
+
 const navigateToLocationPage = () => {
+  let page3FrameIndex = 0;
+  const page3AnimationInterval = setInterval(() => {
+    page3TransitionImageSrc.value =
+      page3TransitionFrames.value[page3FrameIndex];
+    page3FrameIndex++;
+    if (page3FrameIndex >= totalPage3TransitionFrames) {
+      clearInterval(page3AnimationInterval);
+      isPage3TransitionFinished.value = true;
+      showLocationPage();
+    }
+  }, 80); // Adjust the interval duration (in milliseconds) to control the page 3 transition animation speed
+};
+
+const showLocationPage = () => {
   setTimeout(() => {
     console.log("Navigating to location page");
     router.push("/location");
@@ -306,6 +347,16 @@ watch(
           "
           :src="transitionImageSrc"
           alt="Transition"
+          class="w-full h-full object-cover"
+        />
+      </transition>
+    </div>
+    <div class="fixed top-0 left-0 w-full h-full">
+      <transition name="fade">
+        <img
+          v-if="page3TransitionImageSrc && !isPage3TransitionFinished"
+          :src="page3TransitionImageSrc"
+          alt="Page 3 Transition"
           class="w-full h-full object-cover"
         />
       </transition>
