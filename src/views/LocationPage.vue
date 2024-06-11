@@ -1,22 +1,11 @@
 <template>
   <div class="bg-[#FFF4E2] min-h-screen flex items-center justify-center">
-    <transition name="fade">
-      <h1 v-if="isPage3TransitionFinished" class="text-4xl text-center">
-        Location Screen
-      </h1>
-    </transition>
+    <!-- Removed the "Location Screen" text -->
   </div>
 </template>
 
 <script setup>
-import { defineProps } from "vue";
-
-const props = defineProps({
-  isPage3TransitionFinished: {
-    type: Boolean,
-    required: true,
-  },
-});
+// No props needed anymore
 </script>
 
 <style scoped>

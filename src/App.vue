@@ -4,330 +4,161 @@ import { useRouter } from "vue-router";
 
 const router = useRouter();
 const currentFrame = ref(0);
-const totalFrames = 96; // Using frames 0000 to 0095
 const imageSrc = ref("");
 const images = ref([]);
 const isIdleVisible = ref(true);
 const isTransitionFinished = ref(false);
 const touchStartY = ref(0);
-const scrollThreshold = 50; // Adjust the scroll threshold as needed
+const scrollThreshold = 50;
 const isScrollTextVisible = ref(true);
-const page2TransitionFrames = ref([]);
-const totalPage2TransitionFrames = 49; // Using frames 0000 to 0048
-const isPage2TransitionFinished = ref(false);
-const page2IdleFrames = ref([]);
-const totalPage2IdleFrames = 32; // Using frames 0000 to 0031
+const transitionImageSrc = ref("");
+const isTransitioning = ref(false);
 const page2IdleImageSrc = ref("");
-const page2OutTransitionFrames = ref([]);
-const totalPage2OutTransitionFrames = 10; // Using frames 0000 to 0009
 const isPage2OutTransitionFinished = ref(false);
 const isPage2OutTransitioning = ref(false);
+const isPage2IdleVisible = ref(true);
 let page2IdleAnimationInterval = null;
-
-const page3TransitionFrames = ref([]);
-const totalPage3TransitionFrames = 15; // Using frames 0000 to 0027
-const isPage3TransitionFinished = ref(false);
 const page3TransitionImageSrc = ref("");
-
-const page3IdleFrames = ref([]);
-const totalPage3IdleFrames = 32; // Using frames 0000 to 0031
+const isPage3TransitionFinished = ref(false);
 const page3IdleImageSrc = ref("");
 let page3IdleAnimationInterval = null;
 
-const preloadImages = async () => {
+const preloadImages = async (path, totalFrames, step = 1) => {
   const imagePromises = [];
-  for (let i = 0; i < totalFrames; i++) {
-    const imageModule = import(
-      `./assets/screenOne/PG1_IDLE/screen1idle_frame${i
-        .toString()
-        .padStart(4, "0")}.png`
-    );
+  for (let i = 0; i < totalFrames; i += step) {
+    const imageModule = import(`${path}${i.toString().padStart(4, "0")}.png`);
     imagePromises.push(imageModule);
   }
   try {
     const loadedImages = await Promise.all(imagePromises);
-    images.value = loadedImages.map((module) => module.default);
+    return loadedImages.map((module) => module.default);
   } catch (error) {
     console.error("Error preloading images:", error);
+    return [];
   }
 };
 
 onMounted(async () => {
-  await preloadImages();
-  startAnimation();
+  images.value = await preloadImages(
+    "./assets/screenOne/PG1_IDLE/screen1idle_frame",
+    96,
+    2
+  );
+  startAnimation(images.value, 50);
 });
 
-const startAnimation = () => {
+const startAnimation = (frames, interval) => {
   setInterval(() => {
-    currentFrame.value = (currentFrame.value + 1) % totalFrames;
-    imageSrc.value = images.value[currentFrame.value];
-  }, 25); // Adjust the interval duration (in milliseconds) to control the animation speed
+    currentFrame.value = (currentFrame.value + 1) % frames.length;
+    imageSrc.value = frames[currentFrame.value];
+  }, interval);
 };
-
-const transitionFrames = ref([]);
-const totalTransitionFrames = 23; // Using frames 0000 to 0022 for the transition
-const transitionImageSrc = ref("");
-const isTransitioning = ref(false);
-
-const preloadTransitionImages = async () => {
-  const imagePromises = [];
-  for (let i = 0; i < totalTransitionFrames; i++) {
-    const imageModule = import(
-      `./assets/screenOne/PG1_TRANSITION/screen1_frame${i
-        .toString()
-        .padStart(4, "0")}.png`
-    );
-    imagePromises.push(imageModule);
-  }
-  try {
-    const loadedImages = await Promise.all(imagePromises);
-    transitionFrames.value = loadedImages.map((module) => module.default);
-  } catch (error) {
-    console.error("Error preloading transition images:", error);
-  }
-};
-
-onMounted(async () => {
-  await preloadTransitionImages();
-});
 
 const handleTouchStart = (event) => {
   touchStartY.value = event.touches[0].clientY;
 };
 
-const handleTouchMove = (event) => {
+const handleTouchMove = async (event) => {
   if (!isTransitioning.value) {
     const touchCurrentY = event.touches[0].clientY;
     const touchDiff = touchStartY.value - touchCurrentY;
     if (touchDiff > scrollThreshold) {
-      console.log("Transitioning from root screen to time screen");
       isTransitioning.value = true;
       isIdleVisible.value = false;
       isScrollTextVisible.value = false;
-      playTransitionAnimation();
+      await playTransitionAnimation(
+        "./assets/screenOne/PG1_TRANSITION/screen1_frame",
+        23,
+        50
+      );
+      isTransitionFinished.value = true;
+      await navigateToNextPage();
     }
   }
 };
 
-const playTransitionAnimation = () => {
+const playTransitionAnimation = async (path, totalFrames, interval) => {
+  const frames = await preloadImages(path, totalFrames);
+  for (const frame of frames) {
+    transitionImageSrc.value = frame;
+    await new Promise((resolve) => setTimeout(resolve, interval));
+  }
+};
+
+const navigateToNextPage = async () => {
+  await playTransitionAnimation(
+    "./assets/screenTwo/Page2_InTransition/screen2intransition_frame",
+    49,
+    50
+  );
+  router.push("/time");
+  page2IdleImageSrc.value = await startIdleAnimation(
+    "./assets/screenTwo/Page2_Idle/screen2idle_frame",
+    32,
+    50
+  );
+};
+
+const startIdleAnimation = async (path, totalFrames, interval) => {
+  const frames = await preloadImages(path, totalFrames, 2);
   let frameIndex = 0;
-  const animationInterval = setInterval(() => {
-    transitionImageSrc.value = transitionFrames.value[frameIndex];
-    console.log(`Transition frame: ${frameIndex}`);
-    frameIndex++;
-    if (frameIndex >= totalTransitionFrames) {
-      clearInterval(animationInterval);
-      isTransitionFinished.value = true;
-      navigateToNextPage();
-    }
-  }, 50); // Adjust the interval duration (in milliseconds) to control the transition animation speed
-};
-
-const navigateToNextPage = () => {
-  const preloadPage2TransitionImages = async () => {
-    const imagePromises = [];
-    for (let i = 0; i < totalPage2TransitionFrames; i++) {
-      const imageModule = import(
-        `./assets/screenTwo/Page2_InTransition/screen2intransition_frame${i
-          .toString()
-          .padStart(4, "0")}.png`
-      );
-      imagePromises.push(imageModule);
-    }
-    try {
-      const loadedImages = await Promise.all(imagePromises);
-      page2TransitionFrames.value = loadedImages.map(
-        (module) => module.default
-      );
-    } catch (error) {
-      console.error("Error preloading page 2 transition images:", error);
-    }
-  };
-
-  preloadPage2TransitionImages().then(() => {
-    let page2FrameIndex = 0;
-    const page2AnimationInterval = setInterval(() => {
-      transitionImageSrc.value = page2TransitionFrames.value[page2FrameIndex];
-      page2FrameIndex++;
-      if (page2FrameIndex >= totalPage2TransitionFrames) {
-        clearInterval(page2AnimationInterval);
-        isPage2TransitionFinished.value = true;
-        navigateToTimePage();
-      }
-    }, 50); // Adjust the interval duration (in milliseconds) to control the page 2 transition animation speed
-  });
-};
-
-const navigateToTimePage = () => {
-  const preloadPage2IdleImages = async () => {
-    const imagePromises = [];
-    for (let i = 0; i < totalPage2IdleFrames; i++) {
-      const imageModule = import(
-        `./assets/screenTwo/Page2_Idle/screen2idle_frame${i
-          .toString()
-          .padStart(4, "0")}.png`
-      );
-      imagePromises.push(imageModule);
-    }
-    try {
-      const loadedImages = await Promise.all(imagePromises);
-      page2IdleFrames.value = loadedImages.map((module) => module.default);
-    } catch (error) {
-      console.error("Error preloading page 2 idle images:", error);
-    }
-  };
-
-  preloadPage2IdleImages().then(() => {
-    router.push("/time");
-    startPage2IdleAnimation();
-  });
-};
-
-const startPage2IdleAnimation = () => {
-  let page2IdleFrameIndex = 0;
   page2IdleAnimationInterval = setInterval(() => {
-    page2IdleImageSrc.value = page2IdleFrames.value[page2IdleFrameIndex];
-    page2IdleFrameIndex = (page2IdleFrameIndex + 1) % totalPage2IdleFrames;
-  }, 50); // Adjust the interval duration (in milliseconds) to control the page 2 idle animation speed
+    frameIndex = (frameIndex + 1) % frames.length;
+    page2IdleImageSrc.value = frames[frameIndex];
+  }, interval);
+  return frames[frameIndex];
 };
 
-const stopPage2IdleAnimation = () => {
+const stopIdleAnimation = () => {
   clearInterval(page2IdleAnimationInterval);
+  clearInterval(page3IdleAnimationInterval);
 };
 
-const handleTimePageTouchStart = (event) => {
-  touchStartY.value = event.touches[0].clientY;
-};
-
-const handleTimePageTouchMove = (event) => {
+const handleTimePageTouchMove = async (event) => {
   if (!isPage2OutTransitioning.value) {
     const touchCurrentY = event.touches[0].clientY;
     const touchDiff = touchStartY.value - touchCurrentY;
     if (touchDiff > scrollThreshold) {
-      console.log("Transitioning from time screen to location screen");
       isPage2OutTransitioning.value = true;
-      stopPage2IdleAnimation();
-      playPage2OutTransitionAnimation();
-    }
-  }
-};
-
-const playPage2OutTransitionAnimation = () => {
-  let frameIndex = 0;
-  const animationInterval = setInterval(() => {
-    if (
-      page2OutTransitionFrames.value &&
-      page2OutTransitionFrames.value.length > 0 &&
-      frameIndex < page2OutTransitionFrames.value.length
-    ) {
-      page2IdleImageSrc.value = page2OutTransitionFrames.value[frameIndex];
-      console.log(`Page 2 out transition frame: ${frameIndex}`);
-      frameIndex++;
-      if (frameIndex >= page2OutTransitionFrames.value.length) {
-        clearInterval(animationInterval);
-        isPage2OutTransitionFinished.value = true;
-        navigateToLocationPage();
-      }
-    }
-  }, 80); // Adjust the interval duration (in milliseconds) to control page 2 out transition speed
-};
-
-const preloadPage3TransitionImages = async () => {
-  const imagePromises = [];
-  for (let i = 0; i < totalPage3TransitionFrames; i++) {
-    const imageModule = import(
-      `./assets/screenThree/page3_intransition/page3intransition_frame${i
-        .toString()
-        .padStart(4, "0")}.png`
-    );
-    imagePromises.push(imageModule);
-  }
-  try {
-    const loadedImages = await Promise.all(imagePromises);
-    page3TransitionFrames.value = loadedImages.map((module) => module.default);
-  } catch (error) {
-    console.error("Error preloading page 3 transition images:", error);
-  }
-};
-
-onMounted(async () => {
-  await preloadPage3TransitionImages();
-});
-
-const navigateToLocationPage = () => {
-  let page3FrameIndex = 0;
-  const page3AnimationInterval = setInterval(() => {
-    page3TransitionImageSrc.value =
-      page3TransitionFrames.value[page3FrameIndex];
-    page3FrameIndex++;
-    if (page3FrameIndex >= totalPage3TransitionFrames) {
-      clearInterval(page3AnimationInterval);
-      isPage3TransitionFinished.value = true;
-      navigateToLocationIdlePage();
-    }
-  }, 80); // Adjust the interval duration (in milliseconds) to control the page 3 transition animation speed
-};
-
-const navigateToLocationIdlePage = () => {
-  const preloadPage3IdleImages = async () => {
-    const imagePromises = [];
-    for (let i = 0; i < totalPage3IdleFrames; i++) {
-      const imageModule = import(
-        `./assets/screenThree/page3_idle/Screen3idle_frame${i
-          .toString()
-          .padStart(4, "0")}.png`
+      isPage2IdleVisible.value = false;
+      await playTransitionAnimation(
+        "./assets/screenTwo/Page2_OutTransition/screen2outtransition_frame",
+        10,
+        80
       );
-      imagePromises.push(imageModule);
+      isPage2OutTransitionFinished.value = true;
+      await navigateToLocationPage();
     }
-    try {
-      const loadedImages = await Promise.all(imagePromises);
-      page3IdleFrames.value = loadedImages.map((module) => module.default);
-    } catch (error) {
-      console.error("Error preloading page 3 idle images:", error);
-    }
-  };
-
-  preloadPage3IdleImages().then(() => {
-    router.push("/location");
-    startPage3IdleAnimation();
-  });
+  }
 };
 
-const startPage3IdleAnimation = () => {
-  let page3IdleFrameIndex = 0;
+const navigateToLocationPage = async () => {
+  const page3TransitionFrames = await preloadImages(
+    "./assets/screenThree/page3_intransition/page3intransition_frame",
+    15
+  );
+  for (const frame of page3TransitionFrames) {
+    page3TransitionImageSrc.value = frame;
+    await new Promise((resolve) => setTimeout(resolve, 80));
+  }
+  isPage3TransitionFinished.value = true;
+  router.push("/location");
+  page3IdleImageSrc.value = await startPage3IdleAnimation(
+    "./assets/screenThree/page3_idle/Screen3idle_frame",
+    32,
+    30
+  );
+};
+
+const startPage3IdleAnimation = async (path, totalFrames, interval) => {
+  const frames = await preloadImages(path, totalFrames);
+  let frameIndex = 0;
   page3IdleAnimationInterval = setInterval(() => {
-    page3IdleImageSrc.value = page3IdleFrames.value[page3IdleFrameIndex];
-    page3IdleFrameIndex = (page3IdleFrameIndex + 1) % totalPage3IdleFrames;
-  }, 30); // Adjust the interval duration (in milliseconds) to control the page 3 idle animation speed
+    frameIndex = (frameIndex + 1) % frames.length;
+    page3IdleImageSrc.value = frames[frameIndex];
+  }, interval);
+  return frames[frameIndex];
 };
-
-const stopPage3IdleAnimation = () => {
-  clearInterval(page3IdleAnimationInterval);
-};
-
-const preloadPage2OutTransitionImages = async () => {
-  const imagePromises = [];
-  for (let i = 0; i < totalPage2OutTransitionFrames; i++) {
-    const imageModule = import(
-      `./assets/screenTwo/Page2_OutTransition/screen2outtransition_frame${i
-        .toString()
-        .padStart(4, "0")}.png`
-    );
-    imagePromises.push(imageModule);
-  }
-  try {
-    const loadedImages = await Promise.all(imagePromises);
-    page2OutTransitionFrames.value = loadedImages.map(
-      (module) => module.default
-    );
-  } catch (error) {
-    console.error("Error preloading page 2 out transition images:", error);
-  }
-};
-
-onMounted(async () => {
-  await preloadPage2OutTransitionImages();
-});
 
 watch(
   () => router.currentRoute.value,
@@ -338,9 +169,9 @@ watch(
       window.scrollTo(0, 0);
       isTransitioning.value = false;
       isTransitionFinished.value = false;
-      isPage2TransitionFinished.value = false;
       isPage2OutTransitionFinished.value = false;
       isPage2OutTransitioning.value = false;
+      isPage2IdleVisible.value = true;
       isIdleVisible.value = true;
       isScrollTextVisible.value = true;
     }
@@ -375,11 +206,7 @@ watch(
     <div class="fixed top-0 left-0 w-full h-full">
       <transition name="fade">
         <img
-          v-if="
-            transitionImageSrc &&
-            !isPage2TransitionFinished &&
-            !isPage2OutTransitionFinished
-          "
+          v-if="transitionImageSrc && !isPage2OutTransitionFinished"
           :src="transitionImageSrc"
           alt="Transition"
           class="w-full h-full object-cover"
@@ -404,11 +231,11 @@ watch(
     <div
       v-if="$route.path === '/time'"
       class="fixed top-0 left-0 w-full h-full"
-      @touchstart="handleTimePageTouchStart"
+      @touchstart="handleTouchStart"
       @touchmove="handleTimePageTouchMove"
     >
       <img
-        v-if="page2IdleImageSrc && !isPage2OutTransitionFinished"
+        v-if="page2IdleImageSrc && isPage2IdleVisible"
         :src="page2IdleImageSrc"
         alt="Page 2 Idle"
         class="w-full h-full object-cover"
@@ -427,6 +254,7 @@ watch(
     </div>
   </div>
 </template>
+
 <style>
 html,
 body {
