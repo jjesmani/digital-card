@@ -24,25 +24,17 @@ const page3IdleImageSrc = ref("");
 let page3IdleAnimationInterval = null;
 
 const preloadImages = async (path, totalFrames, step = 1) => {
-  const imagePromises = [];
+  const imagePaths = [];
   for (let i = 0; i < totalFrames; i += step) {
-    const imageModule = import(
-      /* @vite-ignore */ `${path}${i.toString().padStart(4, "0")}.png`
-    );
-    imagePromises.push(imageModule);
+    const imagePath = `${path}${i.toString().padStart(4, "0")}.png`;
+    imagePaths.push(imagePath);
   }
-  try {
-    const loadedImages = await Promise.all(imagePromises);
-    return loadedImages.map((module) => module.default);
-  } catch (error) {
-    console.error("Error preloading images:", error);
-    return [];
-  }
+  return imagePaths;
 };
 
 onMounted(async () => {
   images.value = await preloadImages(
-    "./assets/screenOne/SCREEN1_IDLE/screen1idle_frame",
+    "/assets/screenOne/SCREEN1_IDLE/screen1idle_frame",
     8,
     1
   );
@@ -69,7 +61,7 @@ const handleTouchMove = async (event) => {
       isIdleVisible.value = false;
       isScrollTextVisible.value = false;
       await playTransitionAnimation(
-        "./assets/screenOne/SCREEN1_OUTTRANSITION/screen1outtransition_frame",
+        "/assets/screenOne/SCREEN1_OUTTRANSITION/screen1outtransition_frame",
         12,
         60
       );
@@ -89,13 +81,13 @@ const playTransitionAnimation = async (path, totalFrames, interval) => {
 
 const navigateToNextPage = async () => {
   await playTransitionAnimation(
-    "./assets/screenTwo/SCREEN2_INTRANSITION/screen2intransition_frame",
+    "/assets/screenTwo/SCREEN2_INTRANSITION/screen2intransition_frame",
     24,
     60
   );
   router.push("/time");
   page2IdleImageSrc.value = await startIdleAnimation(
-    "./assets/screenTwo/SCREEN2_IDLE/screen2idle_frame",
+    "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame",
     8,
     120
   );
@@ -124,7 +116,7 @@ const handleTimePageTouchMove = async (event) => {
       isPage2OutTransitioning.value = true;
       isPage2IdleVisible.value = false;
       await playTransitionAnimation(
-        "./assets/screenTwo/SCREEN2_OUTTRANSITION/screen2outtransition_frame",
+        "/assets/screenTwo/SCREEN2_OUTTRANSITION/screen2outtransition_frame",
         11,
         50
       );
@@ -136,7 +128,7 @@ const handleTimePageTouchMove = async (event) => {
 
 const navigateToLocationPage = async () => {
   const page3TransitionFrames = await preloadImages(
-    "./assets/screenThree/SCREEN3_INTRANSITION/screen3intransition_frame",
+    "/assets/screenThree/SCREEN3_INTRANSITION/screen3intransition_frame",
     15
   );
   for (const frame of page3TransitionFrames) {
@@ -146,9 +138,9 @@ const navigateToLocationPage = async () => {
   isPage3TransitionFinished.value = true;
   router.push("/location");
   page3IdleImageSrc.value = await startPage3IdleAnimation(
-    "./assets/screenThree/SCREEN3_IDLE/screen3idle_frame",
+    "/assets/screenThree/SCREEN3_IDLE/screen3idle_frame",
     7,
-    0
+    100
   );
 };
 
