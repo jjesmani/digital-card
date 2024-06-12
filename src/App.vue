@@ -30,358 +30,358 @@ const rsvpIdleImageSrc = ref("");
 const page2OutTransitionImageSrc = ref("");
 
 const preloadImages = async (path, totalFrames) => {
-  const imagePaths = [];
-  for (let i = 0; i < totalFrames; i++) {
-    const imagePath = `${path}${i.toString().padStart(4, "0")}.png`;
-    imagePaths.push(imagePath);
-  }
-  return imagePaths;
+    const imagePaths = [];
+    for (let i = 0; i < totalFrames; i++) {
+        const imagePath = `${path}${i.toString().padStart(4, "0")}.png`;
+        imagePaths.push(imagePath);
+    }
+    return imagePaths;
 };
 
 onMounted(async () => {
-  const screenOneIdleFrames = await preloadImages(
-    "/assets/screenOne/SCREEN1_IDLE/screen1idle_frame",
-    8
-  );
-  const screenOneOutTransitionFrames = await preloadImages(
-    "/assets/screenOne/SCREEN1_OUTTRANSITION/screen1outtransition_frame",
-    12
-  );
-  const screenTwoInTransitionFrames = await preloadImages(
-    "/assets/screenTwo/SCREEN2_INTRANSITION/screen2intransition_frame",
-    24
-  );
-  const screenTwoIdleFrames = await preloadImages(
-    "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame",
-    8
-  );
-  const screenTwoOutTransitionFrames = await preloadImages(
-    "/assets/screenTwo/SCREEN2_OUTTRANSITION/screen2outtransition_frame",
-    11
-  );
-  const screenThreeInTransitionFrames = await preloadImages(
-    "/assets/screenThree/SCREEN3_INTRANSITION/screen3intransition_frame",
-    15
-  );
-  const screenThreeIdleFrames = await preloadImages(
-    "/assets/screenThree/SCREEN3_IDLE/screen3idle_frame",
-    7
-  );
-  const screenThreeOutTransitionFrames = await preloadImages(
-    "/assets/screenThree/SCREEN3_OUTTRANSITION/screen3outtransition_frame",
-    16
-  );
+    const screenOneIdleFrames = await preloadImages(
+        "/assets/screenOne/SCREEN1_IDLE/screen1idle_frame",
+        8
+    );
+    const screenOneOutTransitionFrames = await preloadImages(
+        "/assets/screenOne/SCREEN1_OUTTRANSITION/screen1outtransition_frame",
+        12
+    );
+    const screenTwoInTransitionFrames = await preloadImages(
+        "/assets/screenTwo/SCREEN2_INTRANSITION/screen2intransition_frame",
+        24
+    );
+    const screenTwoIdleFrames = await preloadImages(
+        "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame",
+        8
+    );
+    const screenTwoOutTransitionFrames = await preloadImages(
+        "/assets/screenTwo/SCREEN2_OUTTRANSITION/screen2outtransition_frame",
+        11
+    );
+    const screenThreeInTransitionFrames = await preloadImages(
+        "/assets/screenThree/SCREEN3_INTRANSITION/screen3intransition_frame",
+        15
+    );
+    const screenThreeIdleFrames = await preloadImages(
+        "/assets/screenThree/SCREEN3_IDLE/screen3idle_frame",
+        7
+    );
+    const screenThreeOutTransitionFrames = await preloadImages(
+        "/assets/screenThree/SCREEN3_OUTTRANSITION/screen3outtransition_frame",
+        16
+    );
 
-  // Store the preloaded frames in separate variables or an object
+    // Store the preloaded frames in separate variables or an object
 
-  isLoading.value = false;
+    isLoading.value = false;
 
-  // Start the initial animation
-  startAnimation(screenOneIdleFrames, 100);
+    // Start the initial animation
+    startAnimation(screenOneIdleFrames, 100);
 });
 
 const startAnimation = (frames, interval) => {
-  setInterval(() => {
-    currentFrame.value = (currentFrame.value + 1) % frames.length;
-    imageSrc.value = frames[currentFrame.value];
-  }, interval);
+    setInterval(() => {
+        currentFrame.value = (currentFrame.value + 1) % frames.length;
+        imageSrc.value = frames[currentFrame.value];
+    }, interval);
 };
 
 const handleTouchStart = (event) => {
-  touchStartY.value = event.touches[0].clientY;
+    touchStartY.value = event.touches[0].clientY;
 };
 
 const handleTouchMove = async (event) => {
-  if (!isTransitioning.value) {
-    const touchCurrentY = event.touches[0].clientY;
-    const touchDiff = touchStartY.value - touchCurrentY;
-    if (touchDiff > scrollThreshold) {
-      isTransitioning.value = true;
-      isIdleVisible.value = false;
-      isScrollTextVisible.value = false;
-      await playTransitionAnimation(
-        "/assets/screenOne/SCREEN1_OUTTRANSITION/screen1outtransition_frame",
-        12,
-        80
-      );
-      isTransitionFinished.value = true;
-      await navigateToNextPage();
+    if (!isTransitioning.value) {
+        const touchCurrentY = event.touches[0].clientY;
+        const touchDiff = touchStartY.value - touchCurrentY;
+        if (touchDiff > scrollThreshold) {
+            isTransitioning.value = true;
+            isIdleVisible.value = false;
+            isScrollTextVisible.value = false;
+            await playTransitionAnimation(
+                "/assets/screenOne/SCREEN1_OUTTRANSITION/screen1outtransition_frame",
+                12,
+                80
+            );
+            isTransitionFinished.value = true;
+            await navigateToNextPage();
+        }
     }
-  }
 };
 
 const playTransitionAnimation = async (path, totalFrames, interval) => {
-  const frames = await preloadImages(path, totalFrames);
-  for (const frame of frames) {
-    transitionImageSrc.value = frame;
-    await new Promise((resolve) => setTimeout(resolve, interval));
-  }
+    const frames = await preloadImages(path, totalFrames);
+    for (const frame of frames) {
+        transitionImageSrc.value = frame;
+        await new Promise((resolve) => setTimeout(resolve, interval));
+    }
 };
 
 const navigateToNextPage = async () => {
-  isTransitionFinished.value = false; // Reset isTransitionFinished
-  await playTransitionAnimation(
-    "/assets/screenTwo/SCREEN2_INTRANSITION/screen2intransition_frame",
-    24,
-    80
-  );
-  isTransitionFinished.value = true; // Set isTransitionFinished to true after transition
-  router.push("/time");
-  page2IdleImageSrc.value = await startIdleAnimation(
-    "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame",
-    8,
-    200,
-    page2IdleAnimationInterval
-  );
+    isTransitionFinished.value = false; // Reset isTransitionFinished
+    await playTransitionAnimation(
+        "/assets/screenTwo/SCREEN2_INTRANSITION/screen2intransition_frame",
+        24,
+        80
+    );
+    isTransitionFinished.value = true; // Set isTransitionFinished to true after transition
+    router.push("/time");
+    page2IdleImageSrc.value = await startIdleAnimation(
+        "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame",
+        8,
+        200,
+        page2IdleAnimationInterval
+    );
 };
 
 const startIdleAnimation = async (
-  path,
-  totalFrames,
-  interval,
-  animationInterval
+    path,
+    totalFrames,
+    interval,
+    animationInterval
 ) => {
-  const frames = await preloadImages(path, totalFrames);
-  let frameIndex = 0;
-  animationInterval = setInterval(() => {
-    frameIndex = (frameIndex + 1) % frames.length;
-    if (path.includes("SCREEN2")) {
-      page2IdleImageSrc.value = frames[frameIndex];
-    } else if (path.includes("SCREEN3")) {
-      page3IdleImageSrc.value = frames[frameIndex];
-    }
-  }, interval);
-  return frames[frameIndex];
+    const frames = await preloadImages(path, totalFrames);
+    let frameIndex = 0;
+    animationInterval = setInterval(() => {
+        frameIndex = (frameIndex + 1) % frames.length;
+        if (path.includes("SCREEN2")) {
+            page2IdleImageSrc.value = frames[frameIndex];
+        } else if (path.includes("SCREEN3")) {
+            page3IdleImageSrc.value = frames[frameIndex];
+        }
+    }, interval);
+    return frames[frameIndex];
 };
 
 const stopIdleAnimation = () => {
-  clearInterval(page2IdleAnimationInterval);
-  clearInterval(page3IdleAnimationInterval);
+    clearInterval(page2IdleAnimationInterval);
+    clearInterval(page3IdleAnimationInterval);
 };
 
 const handleTimePageTouchMove = async (event) => {
-  if (!isPage2OutTransitioning.value) {
-    const touchCurrentY = event.touches[0].clientY;
-    const touchDiff = touchStartY.value - touchCurrentY;
-    if (touchDiff > scrollThreshold) {
-      isPage2OutTransitioning.value = true;
-      isPage2IdleVisible.value = false;
-      stopIdleAnimation();
-      await playPage2OutTransitionAnimation();
-      isPage2OutTransitionFinished.value = true;
-      await navigateToLocationPage();
+    if (!isPage2OutTransitioning.value) {
+        const touchCurrentY = event.touches[0].clientY;
+        const touchDiff = touchStartY.value - touchCurrentY;
+        if (touchDiff > scrollThreshold) {
+            isPage2OutTransitioning.value = true;
+            isPage2IdleVisible.value = false;
+            stopIdleAnimation();
+            await playPage2OutTransitionAnimation();
+            isPage2OutTransitionFinished.value = true;
+            await navigateToLocationPage();
+        }
     }
-  }
 };
 
 const playPage2OutTransitionAnimation = async () => {
-  const frames = await preloadImages(
-    "/assets/screenTwo/SCREEN2_OUTTRANSITION/screen2outtransition_frame",
-    11
-  );
-  for (const frame of frames) {
-    page2OutTransitionImageSrc.value = frame;
-    await new Promise((resolve) => setTimeout(resolve, 60));
-  }
+    const frames = await preloadImages(
+        "/assets/screenTwo/SCREEN2_OUTTRANSITION/screen2outtransition_frame",
+        11
+    );
+    for (const frame of frames) {
+        page2OutTransitionImageSrc.value = frame;
+        await new Promise((resolve) => setTimeout(resolve, 60));
+    }
 };
 
 const navigateToLocationPage = async () => {
-  const page3TransitionFrames = await preloadImages(
-    "/assets/screenThree/SCREEN3_INTRANSITION/screen3intransition_frame",
-    15
-  );
-  for (const frame of page3TransitionFrames) {
-    page3TransitionImageSrc.value = frame;
-    await new Promise((resolve) => setTimeout(resolve, 80));
-  }
-  isPage3TransitionFinished.value = true;
-  router.push("/location");
-  page3IdleImageSrc.value = await startIdleAnimation(
-    "/assets/screenThree/SCREEN3_IDLE/screen3idle_frame",
-    7,
-    170,
-    page3IdleAnimationInterval
-  );
+    const page3TransitionFrames = await preloadImages(
+        "/assets/screenThree/SCREEN3_INTRANSITION/screen3intransition_frame",
+        15
+    );
+    for (const frame of page3TransitionFrames) {
+        page3TransitionImageSrc.value = frame;
+        await new Promise((resolve) => setTimeout(resolve, 80));
+    }
+    isPage3TransitionFinished.value = true;
+    router.push("/location");
+    page3IdleImageSrc.value = await startIdleAnimation(
+        "/assets/screenThree/SCREEN3_IDLE/screen3idle_frame",
+        7,
+        170,
+        page3IdleAnimationInterval
+    );
 };
 
 const handleLocationPageTouchMove = async (event) => {
-  if (!isPage3OutTransitioning.value) {
-    const touchCurrentY = event.touches[0].clientY;
-    const touchDiff = touchStartY.value - touchCurrentY;
-    if (touchDiff > scrollThreshold) {
-      isPage3OutTransitioning.value = true;
-      stopIdleAnimation();
-      await playPage3OutTransitionAnimation();
-      isPage3OutTransitionFinished.value = true;
-      await navigateToRsvpPage();
+    if (!isPage3OutTransitioning.value) {
+        const touchCurrentY = event.touches[0].clientY;
+        const touchDiff = touchStartY.value - touchCurrentY;
+        if (touchDiff > scrollThreshold) {
+            isPage3OutTransitioning.value = true;
+            stopIdleAnimation();
+            await playPage3OutTransitionAnimation();
+            isPage3OutTransitionFinished.value = true;
+            await navigateToRsvpPage();
+        }
     }
-  }
 };
 
 const playPage3OutTransitionAnimation = async () => {
-  const frames = await preloadImages(
-    "/assets/screenThree/SCREEN3_OUTTRANSITION/screen3outtransition_frame",
-    16
-  );
-  for (const frame of frames) {
-    page3OutTransitionImageSrc.value = frame;
-    await new Promise((resolve) => setTimeout(resolve, 100));
-  }
-  rsvpIdleImageSrc.value = frames[frames.length - 1];
+    const frames = await preloadImages(
+        "/assets/screenThree/SCREEN3_OUTTRANSITION/screen3outtransition_frame",
+        16
+    );
+    for (const frame of frames) {
+        page3OutTransitionImageSrc.value = frame;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    rsvpIdleImageSrc.value = frames[frames.length - 1];
 };
 
 const navigateToRsvpPage = async () => {
-  router.push("/rsvp");
+    router.push("/rsvp");
 };
 
 watch(
-  () => router.currentRoute.value,
-  (newRoute) => {
-    if (newRoute.path === "/") {
-      currentFrame.value = 0;
-      imageSrc.value = images.value[0];
-      window.scrollTo(0, 0);
-      isTransitioning.value = false;
-      isTransitionFinished.value = false;
-      isPage2OutTransitionFinished.value = false;
-      isPage2OutTransitioning.value = false;
-      isPage2IdleVisible.value = true;
-      isIdleVisible.value = true;
-      isScrollTextVisible.value = true;
+    () => router.currentRoute.value,
+    (newRoute) => {
+        if (newRoute.path === "/") {
+            currentFrame.value = 0;
+            imageSrc.value = images.value[0];
+            window.scrollTo(0, 0);
+            isTransitioning.value = false;
+            isTransitionFinished.value = false;
+            isPage2OutTransitionFinished.value = false;
+            isPage2OutTransitioning.value = false;
+            isPage2IdleVisible.value = true;
+            isIdleVisible.value = true;
+            isScrollTextVisible.value = true;
+        }
     }
-  }
 );
 </script>
 
 <template>
-  <div
-    class="bg-[#FFF4E2] min-h-screen flex flex-col items-center justify-center relative"
-    @touchstart="handleTouchStart"
-    @touchmove="handleTouchMove"
-  >
     <div
-      v-if="isLoading"
-      class="fixed z-50 inset-0 bg-[#FFF4E2] flex items-center justify-center"
+        class="bg-[#FFF4E2] min-h-screen flex flex-col items-center justify-center relative"
+        @touchstart="handleTouchStart"
+        @touchmove="handleTouchMove"
     >
-      <span class="text-brown-600">Loading...</span>
-    </div>
-    <div v-else class="flex flex-col items-center justify-center w-full">
-      <div class="flex items-center justify-center relative">
-        <transition name="fade">
-          <img
-            v-if="isIdleVisible && imageSrc"
-            :src="imageSrc"
-            alt="Screen 1 Idle"
-            class="max-w-full max-h-full object-contain"
-          />
-        </transition>
-        <p
-          v-if="isScrollTextVisible"
-          class="text-[#9A7373] absolute bottom-0 left-1/2 transform -translate-x-1/2 mb-4"
+        <div
+            v-if="isLoading"
+            class="fixed z-50 inset-0 bg-[#FFF4E2] flex items-center justify-center"
         >
-          scroll to open
-        </p>
-      </div>
+            <span class="text-brown-600">Loading...</span>
+        </div>
+        <div v-else class="flex flex-col items-center justify-center w-full">
+            <div class="flex items-center justify-center relative">
+                <transition name="fade">
+                    <img
+                        v-if="isIdleVisible && imageSrc"
+                        :src="imageSrc"
+                        alt="Screen 1 Idle"
+                        class="max-w-full max-h-full object-contain"
+                    />
+                </transition>
+                <p
+                    v-if="isScrollTextVisible"
+                    class="text-[#9A7373] absolute bottom-0 left-1/2 transform -translate-x-1/2 mb-4"
+                >
+                    scroll to open
+                </p>
+            </div>
+        </div>
+        <div class="fixed top-0 left-0 w-full h-full">
+            <transition name="fade">
+                <img
+                    v-if="
+                        transitionImageSrc &&
+                        !isPage2OutTransitionFinished &&
+                        !isPage3OutTransitionFinished &&
+                        !isTransitionFinished
+                    "
+                    :src="transitionImageSrc"
+                    alt="Transition"
+                    class="w-full h-full object-cover"
+                />
+            </transition>
+        </div>
+        <div class="fixed top-0 left-0 w-full h-full">
+            <transition name="fade">
+                <img
+                    v-if="page3TransitionImageSrc && !isPage3TransitionFinished"
+                    :src="page3TransitionImageSrc"
+                    alt="Page 3 Transition"
+                    class="w-full h-full object-cover"
+                />
+            </transition>
+        </div>
+        <router-view v-slot="{ Component }">
+            <transition name="fade">
+                <component :is="Component" />
+            </transition>
+        </router-view>
+        <div
+            v-if="$route.path === '/time'"
+            class="fixed top-0 left-0 w-full h-full"
+            @touchstart="handleTouchStart"
+            @touchmove="handleTimePageTouchMove"
+        >
+            <img
+                v-if="page2IdleImageSrc && isPage2IdleVisible"
+                :src="page2IdleImageSrc"
+                alt="Page 2 Idle"
+                class="w-full h-full object-cover"
+            />
+            <transition name="fade">
+                <img
+                    v-if="page2OutTransitionImageSrc && isPage2OutTransitioning"
+                    :src="page2OutTransitionImageSrc"
+                    alt="Page 2 Out Transition"
+                    class="w-full h-full object-cover"
+                />
+            </transition>
+        </div>
+        <div
+            v-if="$route.path === '/location'"
+            class="fixed top-0 left-0 w-full h-full bg-[#FFF4E2]"
+            @touchstart="handleTouchStart"
+            @touchmove="handleLocationPageTouchMove"
+        >
+            <img
+                v-if="page3IdleImageSrc && !isPage3OutTransitioning"
+                :src="page3IdleImageSrc"
+                alt="Page 3 Idle"
+                class="w-full h-full object-cover"
+            />
+            <transition name="fade">
+                <img
+                    v-if="page3OutTransitionImageSrc && isPage3OutTransitioning"
+                    :src="page3OutTransitionImageSrc"
+                    alt="Page 3 Out Transition"
+                    class="w-full h-full object-cover"
+                />
+            </transition>
+        </div>
+        <div
+            v-if="$route.path === '/rsvp'"
+            class="fixed top-0 left-0 w-full h-full"
+        >
+            <img
+                v-if="rsvpIdleImageSrc"
+                :src="rsvpIdleImageSrc"
+                alt="RSVP Idle"
+                class="w-full h-full object-cover"
+            />
+        </div>
     </div>
-    <div class="fixed top-0 left-0 w-full h-full">
-      <transition name="fade">
-        <img
-          v-if="
-            transitionImageSrc &&
-            !isPage2OutTransitionFinished &&
-            !isPage3OutTransitionFinished &&
-            !isTransitionFinished
-          "
-          :src="transitionImageSrc"
-          alt="Transition"
-          class="w-full h-full object-cover"
-        />
-      </transition>
-    </div>
-    <div class="fixed top-0 left-0 w-full h-full">
-      <transition name="fade">
-        <img
-          v-if="page3TransitionImageSrc && !isPage3TransitionFinished"
-          :src="page3TransitionImageSrc"
-          alt="Page 3 Transition"
-          class="w-full h-full object-cover"
-        />
-      </transition>
-    </div>
-    <router-view v-slot="{ Component }">
-      <transition name="fade" mode="out-in">
-        <component :is="Component" />
-      </transition>
-    </router-view>
-    <div
-      v-if="$route.path === '/time'"
-      class="fixed top-0 left-0 w-full h-full"
-      @touchstart="handleTouchStart"
-      @touchmove="handleTimePageTouchMove"
-    >
-      <img
-        v-if="page2IdleImageSrc && isPage2IdleVisible"
-        :src="page2IdleImageSrc"
-        alt="Page 2 Idle"
-        class="w-full h-full object-cover"
-      />
-      <transition name="fade">
-        <img
-          v-if="page2OutTransitionImageSrc && isPage2OutTransitioning"
-          :src="page2OutTransitionImageSrc"
-          alt="Page 2 Out Transition"
-          class="w-full h-full object-cover"
-        />
-      </transition>
-    </div>
-    <div
-      v-if="$route.path === '/location'"
-      class="fixed top-0 left-0 w-full h-full bg-[#FFF4E2]"
-      @touchstart="handleTouchStart"
-      @touchmove="handleLocationPageTouchMove"
-    >
-      <img
-        v-if="page3IdleImageSrc && !isPage3OutTransitioning"
-        :src="page3IdleImageSrc"
-        alt="Page 3 Idle"
-        class="w-full h-full object-cover"
-      />
-      <transition name="fade">
-        <img
-          v-if="page3OutTransitionImageSrc && isPage3OutTransitioning"
-          :src="page3OutTransitionImageSrc"
-          alt="Page 3 Out Transition"
-          class="w-full h-full object-cover"
-        />
-      </transition>
-    </div>
-    <div
-      v-if="$route.path === '/rsvp'"
-      class="fixed top-0 left-0 w-full h-full"
-    >
-      <img
-        v-if="rsvpIdleImageSrc"
-        :src="rsvpIdleImageSrc"
-        alt="RSVP Idle"
-        class="w-full h-full object-cover"
-      />
-    </div>
-  </div>
 </template>
 
 <style>
 html,
 body {
-  background-color: #fff4e2;
+    background-color: #fff4e2;
 }
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.5s;
+    transition: opacity 0.3s;
 }
 
 .fade-enter,
 .fade-leave-to {
-  opacity: 0;
+    opacity: 0;
 }
 </style>
