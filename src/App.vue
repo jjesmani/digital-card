@@ -27,6 +27,7 @@ const isPage3OutTransitioning = ref(false);
 const isPage3OutTransitionFinished = ref(false);
 const isLoading = ref(true);
 const rsvpIdleImageSrc = ref("");
+const page2OutTransitionImageSrc = ref("");
 
 const preloadImages = async (path, totalFrames) => {
   const imagePaths = [];
@@ -118,11 +119,13 @@ const playTransitionAnimation = async (path, totalFrames, interval) => {
 };
 
 const navigateToNextPage = async () => {
+  isTransitionFinished.value = false; // Reset isTransitionFinished
   await playTransitionAnimation(
     "/assets/screenTwo/SCREEN2_INTRANSITION/screen2intransition_frame",
     24,
     80
   );
+  isTransitionFinished.value = true; // Set isTransitionFinished to true after transition
   router.push("/time");
   page2IdleImageSrc.value = await startIdleAnimation(
     "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame",
@@ -164,14 +167,21 @@ const handleTimePageTouchMove = async (event) => {
       isPage2OutTransitioning.value = true;
       isPage2IdleVisible.value = false;
       stopIdleAnimation();
-      await playTransitionAnimation(
-        "/assets/screenTwo/SCREEN2_OUTTRANSITION/screen2outtransition_frame",
-        11,
-        60
-      );
+      await playPage2OutTransitionAnimation();
       isPage2OutTransitionFinished.value = true;
       await navigateToLocationPage();
     }
+  }
+};
+
+const playPage2OutTransitionAnimation = async () => {
+  const frames = await preloadImages(
+    "/assets/screenTwo/SCREEN2_OUTTRANSITION/screen2outtransition_frame",
+    11
+  );
+  for (const frame of frames) {
+    page2OutTransitionImageSrc.value = frame;
+    await new Promise((resolve) => setTimeout(resolve, 60));
   }
 };
 
@@ -279,7 +289,8 @@ watch(
           v-if="
             transitionImageSrc &&
             !isPage2OutTransitionFinished &&
-            !isPage3OutTransitionFinished
+            !isPage3OutTransitionFinished &&
+            !isTransitionFinished
           "
           :src="transitionImageSrc"
           alt="Transition"
@@ -314,6 +325,14 @@ watch(
         alt="Page 2 Idle"
         class="w-full h-full object-cover"
       />
+      <transition name="fade">
+        <img
+          v-if="page2OutTransitionImageSrc && isPage2OutTransitioning"
+          :src="page2OutTransitionImageSrc"
+          alt="Page 2 Out Transition"
+          class="w-full h-full object-cover"
+        />
+      </transition>
     </div>
     <div
       v-if="$route.path === '/location'"
