@@ -28,9 +28,9 @@ const isPage3OutTransitionFinished = ref(false);
 const isLoading = ref(true);
 const rsvpIdleImageSrc = ref("");
 
-const preloadImages = async (path, totalFrames, step = 1) => {
+const preloadImages = async (path, totalFrames) => {
   const imagePaths = [];
-  for (let i = 0; i < totalFrames; i += step) {
+  for (let i = 0; i < totalFrames; i++) {
     const imagePath = `${path}${i.toString().padStart(4, "0")}.png`;
     imagePaths.push(imagePath);
   }
@@ -40,8 +40,7 @@ const preloadImages = async (path, totalFrames, step = 1) => {
 onMounted(async () => {
   const screenOneIdleFrames = await preloadImages(
     "/assets/screenOne/SCREEN1_IDLE/screen1idle_frame",
-    8,
-    1
+    8
   );
   const screenOneOutTransitionFrames = await preloadImages(
     "/assets/screenOne/SCREEN1_OUTTRANSITION/screen1outtransition_frame",
@@ -53,8 +52,7 @@ onMounted(async () => {
   );
   const screenTwoIdleFrames = await preloadImages(
     "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame",
-    8,
-    2
+    8
   );
   const screenTwoOutTransitionFrames = await preloadImages(
     "/assets/screenTwo/SCREEN2_OUTTRANSITION/screen2outtransition_frame",
@@ -140,7 +138,7 @@ const startIdleAnimation = async (
   interval,
   animationInterval
 ) => {
-  const frames = await preloadImages(path, totalFrames, 2);
+  const frames = await preloadImages(path, totalFrames);
   let frameIndex = 0;
   animationInterval = setInterval(() => {
     frameIndex = (frameIndex + 1) % frames.length;
@@ -197,23 +195,13 @@ const navigateToLocationPage = async () => {
 };
 
 const handleLocationPageTouchMove = async (event) => {
-  console.log("handleLocationPageTouchMove called");
   if (!isPage3OutTransitioning.value) {
-    console.log("isPage3OutTransitioning is false");
     const touchCurrentY = event.touches[0].clientY;
     const touchDiff = touchStartY.value - touchCurrentY;
-    console.log("touchDiff:", touchDiff);
     if (touchDiff > scrollThreshold) {
-      console.log("Scroll threshold exceeded");
       isPage3OutTransitioning.value = true;
-      console.log(
-        "isPage3OutTransitioning updated:",
-        isPage3OutTransitioning.value
-      );
       stopIdleAnimation();
-      console.log("Playing screen3 out transition animation");
       await playPage3OutTransitionAnimation();
-      console.log("Screen3 out transition animation finished");
       isPage3OutTransitionFinished.value = true;
       await navigateToRsvpPage();
     }
@@ -233,7 +221,6 @@ const playPage3OutTransitionAnimation = async () => {
 };
 
 const navigateToRsvpPage = async () => {
-  console.log("Navigating to RSVP page");
   router.push("/rsvp");
 };
 
