@@ -26,6 +26,7 @@ const page3OutTransitionImageSrc = ref("");
 const isPage3OutTransitioning = ref(false);
 const isPage3OutTransitionFinished = ref(false);
 const isLoading = ref(true);
+const rsvpIdleImageSrc = ref("");
 
 const preloadImages = async (path, totalFrames, step = 1) => {
   const imagePaths = [];
@@ -69,7 +70,7 @@ onMounted(async () => {
   );
   const screenThreeOutTransitionFrames = await preloadImages(
     "/assets/screenThree/SCREEN3_OUTTRANSITION/screen3outtransition_frame",
-    17
+    16
   );
 
   // Store the preloaded frames in separate variables or an object
@@ -102,7 +103,7 @@ const handleTouchMove = async (event) => {
       await playTransitionAnimation(
         "/assets/screenOne/SCREEN1_OUTTRANSITION/screen1outtransition_frame",
         12,
-        60
+        80
       );
       isTransitionFinished.value = true;
       await navigateToNextPage();
@@ -122,13 +123,13 @@ const navigateToNextPage = async () => {
   await playTransitionAnimation(
     "/assets/screenTwo/SCREEN2_INTRANSITION/screen2intransition_frame",
     24,
-    60
+    80
   );
   router.push("/time");
   page2IdleImageSrc.value = await startIdleAnimation(
     "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame",
     8,
-    120,
+    200,
     page2IdleAnimationInterval
   );
 };
@@ -143,7 +144,11 @@ const startIdleAnimation = async (
   let frameIndex = 0;
   animationInterval = setInterval(() => {
     frameIndex = (frameIndex + 1) % frames.length;
-    page2IdleImageSrc.value = frames[frameIndex];
+    if (path.includes("SCREEN2")) {
+      page2IdleImageSrc.value = frames[frameIndex];
+    } else if (path.includes("SCREEN3")) {
+      page3IdleImageSrc.value = frames[frameIndex];
+    }
   }, interval);
   return frames[frameIndex];
 };
@@ -164,7 +169,7 @@ const handleTimePageTouchMove = async (event) => {
       await playTransitionAnimation(
         "/assets/screenTwo/SCREEN2_OUTTRANSITION/screen2outtransition_frame",
         11,
-        50
+        60
       );
       isPage2OutTransitionFinished.value = true;
       await navigateToLocationPage();
@@ -186,7 +191,7 @@ const navigateToLocationPage = async () => {
   page3IdleImageSrc.value = await startIdleAnimation(
     "/assets/screenThree/SCREEN3_IDLE/screen3idle_frame",
     7,
-    100,
+    170,
     page3IdleAnimationInterval
   );
 };
@@ -201,18 +206,30 @@ const handleLocationPageTouchMove = async (event) => {
     if (touchDiff > scrollThreshold) {
       console.log("Scroll threshold exceeded");
       isPage3OutTransitioning.value = true;
+      console.log(
+        "isPage3OutTransitioning updated:",
+        isPage3OutTransitioning.value
+      );
       stopIdleAnimation();
       console.log("Playing screen3 out transition animation");
-      await playTransitionAnimation(
-        "/assets/screenThree/SCREEN3_OUTTRANSITION/screen3outtransition_frame",
-        17,
-        60
-      );
+      await playPage3OutTransitionAnimation();
       console.log("Screen3 out transition animation finished");
       isPage3OutTransitionFinished.value = true;
       await navigateToRsvpPage();
     }
   }
+};
+
+const playPage3OutTransitionAnimation = async () => {
+  const frames = await preloadImages(
+    "/assets/screenThree/SCREEN3_OUTTRANSITION/screen3outtransition_frame",
+    16
+  );
+  for (const frame of frames) {
+    page3OutTransitionImageSrc.value = frame;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  rsvpIdleImageSrc.value = frames[frames.length - 1];
 };
 
 const navigateToRsvpPage = async () => {
@@ -293,16 +310,6 @@ watch(
         />
       </transition>
     </div>
-    <div class="fixed top-0 left-0 w-full h-full">
-      <transition name="fade">
-        <img
-          v-if="page3OutTransitionImageSrc && isPage3OutTransitioning"
-          :src="page3OutTransitionImageSrc"
-          alt="Page 3 Out Transition"
-          class="w-full h-full object-cover"
-        />
-      </transition>
-    </div>
     <router-view v-slot="{ Component }">
       <transition name="fade" mode="out-in">
         <component :is="Component" />
@@ -323,7 +330,7 @@ watch(
     </div>
     <div
       v-if="$route.path === '/location'"
-      class="fixed top-0 left-0 w-full h-full"
+      class="fixed top-0 left-0 w-full h-full bg-[#FFF4E2]"
       @touchstart="handleTouchStart"
       @touchmove="handleLocationPageTouchMove"
     >
@@ -331,6 +338,25 @@ watch(
         v-if="page3IdleImageSrc && !isPage3OutTransitioning"
         :src="page3IdleImageSrc"
         alt="Page 3 Idle"
+        class="w-full h-full object-cover"
+      />
+      <transition name="fade">
+        <img
+          v-if="page3OutTransitionImageSrc && isPage3OutTransitioning"
+          :src="page3OutTransitionImageSrc"
+          alt="Page 3 Out Transition"
+          class="w-full h-full object-cover"
+        />
+      </transition>
+    </div>
+    <div
+      v-if="$route.path === '/rsvp'"
+      class="fixed top-0 left-0 w-full h-full"
+    >
+      <img
+        v-if="rsvpIdleImageSrc"
+        :src="rsvpIdleImageSrc"
+        alt="RSVP Idle"
         class="w-full h-full object-cover"
       />
     </div>
