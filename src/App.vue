@@ -28,6 +28,9 @@ const isPage3OutTransitionFinished = ref(false);
 const isLoading = ref(true);
 const rsvpIdleImageSrc = ref("");
 const page2OutTransitionImageSrc = ref("");
+const page4OutTransitionImageSrc = ref("");
+const isPage4OutTransitioning = ref(false);
+const isPage4OutTransitionFinished = ref(false);
 
 const preloadImages = async (path, totalFrames) => {
     const imagePaths = [];
@@ -35,49 +38,72 @@ const preloadImages = async (path, totalFrames) => {
         const imagePath = `${path}${i.toString().padStart(4, "0")}.png`;
         imagePaths.push(imagePath);
     }
-    return imagePaths;
+    const imagePromises = imagePaths.map((path) => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve();
+            img.onerror = () =>
+                reject(new Error(`Failed to load image: ${path}`));
+            img.src = path;
+        });
+    });
+    try {
+        await Promise.all(imagePromises);
+        return imagePaths;
+    } catch (error) {
+        console.error("Error preloading images:", error);
+        return [];
+    }
 };
 
 onMounted(async () => {
-    const screenOneIdleFrames = await preloadImages(
-        "/assets/screenOne/SCREEN1_IDLE/screen1idle_frame",
-        8
-    );
-    const screenOneOutTransitionFrames = await preloadImages(
-        "/assets/screenOne/SCREEN1_OUTTRANSITION/screen1outtransition_frame",
-        12
-    );
-    const screenTwoInTransitionFrames = await preloadImages(
-        "/assets/screenTwo/SCREEN2_INTRANSITION/screen2intransition_frame",
-        24
-    );
-    const screenTwoIdleFrames = await preloadImages(
-        "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame",
-        8
-    );
-    const screenTwoOutTransitionFrames = await preloadImages(
-        "/assets/screenTwo/SCREEN2_OUTTRANSITION/screen2outtransition_frame",
-        11
-    );
-    const screenThreeInTransitionFrames = await preloadImages(
-        "/assets/screenThree/SCREEN3_INTRANSITION/screen3intransition_frame",
-        15
-    );
-    const screenThreeIdleFrames = await preloadImages(
-        "/assets/screenThree/SCREEN3_IDLE/screen3idle_frame",
-        7
-    );
-    const screenThreeOutTransitionFrames = await preloadImages(
-        "/assets/screenThree/SCREEN3_OUTTRANSITION/screen3outtransition_frame",
-        16
-    );
+    try {
+        const screenOneIdleFrames = await preloadImages(
+            "/assets/screenOne/SCREEN1_IDLE/screen1idle_frame",
+            8
+        );
+        const screenOneOutTransitionFrames = await preloadImages(
+            "/assets/screenOne/SCREEN1_OUTTRANSITION/screen1outtransition_frame",
+            12
+        );
+        const screenTwoInTransitionFrames = await preloadImages(
+            "/assets/screenTwo/SCREEN2_INTRANSITION/screen2intransition_frame",
+            24
+        );
+        const screenTwoIdleFrames = await preloadImages(
+            "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame",
+            8
+        );
+        const screenTwoOutTransitionFrames = await preloadImages(
+            "/assets/screenTwo/SCREEN2_OUTTRANSITION/screen2outtransition_frame",
+            11
+        );
+        const screenThreeInTransitionFrames = await preloadImages(
+            "/assets/screenThree/SCREEN3_INTRANSITION/screen3intransition_frame",
+            15
+        );
+        const screenThreeIdleFrames = await preloadImages(
+            "/assets/screenThree/SCREEN3_IDLE/screen3idle_frame",
+            7
+        );
+        const screenThreeOutTransitionFrames = await preloadImages(
+            "/assets/screenThree/SCREEN3_OUTTRANSITION/screen3outtransition_frame",
+            16
+        );
+        const screenFourOutTransitionFrames = await preloadImages(
+            "/assets/screenFour/screen4outtransition_frame",
+            11
+        );
 
-    // Store the preloaded frames in separate variables or an object
+        // Store the preloaded frames in separate variables or an object
 
-    isLoading.value = false;
+        isLoading.value = false;
 
-    // Start the initial animation
-    startAnimation(screenOneIdleFrames, 100);
+        // Start the initial animation
+        startAnimation(screenOneIdleFrames, 100);
+    } catch (error) {
+        console.error("Error in onMounted:", error);
+    }
 });
 
 const startAnimation = (frames, interval) => {
@@ -234,6 +260,37 @@ const navigateToRsvpPage = async () => {
     router.push("/rsvp");
 };
 
+const handleRsvpPageTouchMove = async (event) => {
+    if (!isPage4OutTransitioning.value) {
+        const touchCurrentY = event.touches[0].clientY;
+        const touchDiff = touchStartY.value - touchCurrentY;
+        if (touchDiff > scrollThreshold) {
+            isPage4OutTransitioning.value = true;
+            console.log("Starting page 4 out transition"); // Debugging statement
+            await playPage4OutTransitionAnimation();
+            console.log("Page 4 out transition finished"); // Debugging statement
+            isPage4OutTransitionFinished.value = true;
+            await navigateToCountingPage();
+        }
+    }
+};
+const playPage4OutTransitionAnimation = async () => {
+    const frames = await preloadImages(
+        "/assets/screenFour/screen4outtransition_frame",
+        11
+    );
+    console.log("Preloaded page 4 out transition frames:", frames); // Debugging statement
+    for (const frame of frames) {
+        page4OutTransitionImageSrc.value = frame;
+        console.log("Setting page 4 out transition image:", frame); // Debugging statement
+        await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+};
+
+const navigateToCountingPage = async () => {
+    router.push("/counting");
+};
+
 watch(
     () => router.currentRoute.value,
     (newRoute) => {
@@ -248,6 +305,8 @@ watch(
             isPage2IdleVisible.value = true;
             isIdleVisible.value = true;
             isScrollTextVisible.value = true;
+            isPage4OutTransitioning.value = false;
+            isPage4OutTransitionFinished.value = false;
         }
     }
 );
@@ -290,6 +349,7 @@ watch(
                         transitionImageSrc &&
                         !isPage2OutTransitionFinished &&
                         !isPage3OutTransitionFinished &&
+                        !isPage4OutTransitionFinished &&
                         !isTransitionFinished
                     "
                     :src="transitionImageSrc"
@@ -358,17 +418,34 @@ watch(
         <div
             v-if="$route.path === '/rsvp'"
             class="fixed top-0 left-0 w-full h-full"
+            @touchstart="handleTouchStart"
+            @touchmove="handleRsvpPageTouchMove"
         >
             <img
-                v-if="rsvpIdleImageSrc"
+                v-if="
+                    rsvpIdleImageSrc &&
+                    !isPage4OutTransitioning &&
+                    !isPage4OutTransitionFinished
+                "
                 :src="rsvpIdleImageSrc"
                 alt="RSVP Idle"
                 class="w-full h-full object-cover"
             />
+            <transition name="fade">
+                <img
+                    v-if="
+                        page4OutTransitionImageSrc &&
+                        (isPage4OutTransitioning ||
+                            isPage4OutTransitionFinished)
+                    "
+                    :src="page4OutTransitionImageSrc"
+                    alt="Page 4 Out Transition"
+                    class="w-full h-full object-cover"
+                />
+            </transition>
         </div>
     </div>
 </template>
-
 <style>
 html,
 body {
