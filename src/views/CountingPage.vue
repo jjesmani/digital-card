@@ -1,7 +1,5 @@
 <template>
-    <div class="counting-page">
-        <h1>Counting Page</h1>
-    </div>
+    <div class="counting-page"></div>
 </template>
 
 <script>

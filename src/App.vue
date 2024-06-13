@@ -31,6 +31,10 @@ const page2OutTransitionImageSrc = ref("");
 const page4OutTransitionImageSrc = ref("");
 const isPage4OutTransitioning = ref(false);
 const isPage4OutTransitionFinished = ref(false);
+const page5TransitionImageSrc = ref("");
+const isPage5TransitionFinished = ref(false);
+const page5IdleImageSrc = ref("");
+let page5IdleAnimationInterval = null;
 
 const preloadImages = async (path, totalFrames) => {
     const imagePaths = [];
@@ -94,8 +98,14 @@ onMounted(async () => {
             "/assets/screenFour/screen4outtransition_frame",
             11
         );
-
-        // Store the preloaded frames in separate variables or an object
+        const screenFiveInTransitionFrames = await preloadImages(
+            "/assets/screenFive/SCREEN5_INTRANSITION/screen5intransition_frame",
+            11
+        );
+        const screenFiveIdleFrames = await preloadImages(
+            "/assets/screenFive/SCREEN5_IDLE/screen5idle_frame",
+            8
+        );
 
         isLoading.value = false;
 
@@ -175,6 +185,8 @@ const startIdleAnimation = async (
             page2IdleImageSrc.value = frames[frameIndex];
         } else if (path.includes("SCREEN3")) {
             page3IdleImageSrc.value = frames[frameIndex];
+        } else if (path.includes("SCREEN5")) {
+            page5IdleImageSrc.value = frames[frameIndex];
         }
     }, interval);
     return frames[frameIndex];
@@ -183,6 +195,7 @@ const startIdleAnimation = async (
 const stopIdleAnimation = () => {
     clearInterval(page2IdleAnimationInterval);
     clearInterval(page3IdleAnimationInterval);
+    clearInterval(page5IdleAnimationInterval);
 };
 
 const handleTimePageTouchMove = async (event) => {
@@ -266,29 +279,45 @@ const handleRsvpPageTouchMove = async (event) => {
         const touchDiff = touchStartY.value - touchCurrentY;
         if (touchDiff > scrollThreshold) {
             isPage4OutTransitioning.value = true;
-            console.log("Starting page 4 out transition"); // Debugging statement
             await playPage4OutTransitionAnimation();
-            console.log("Page 4 out transition finished"); // Debugging statement
             isPage4OutTransitionFinished.value = true;
             await navigateToCountingPage();
         }
     }
 };
+
 const playPage4OutTransitionAnimation = async () => {
     const frames = await preloadImages(
         "/assets/screenFour/screen4outtransition_frame",
         11
     );
-    console.log("Preloaded page 4 out transition frames:", frames); // Debugging statement
     for (const frame of frames) {
         page4OutTransitionImageSrc.value = frame;
-        console.log("Setting page 4 out transition image:", frame); // Debugging statement
         await new Promise((resolve) => setTimeout(resolve, 100));
     }
 };
 
 const navigateToCountingPage = async () => {
+    await playPage5TransitionAnimation();
+    isPage5TransitionFinished.value = true;
     router.push("/counting");
+    page5IdleImageSrc.value = await startIdleAnimation(
+        "/assets/screenFive/SCREEN5_IDLE/screen5idle_frame",
+        8,
+        200,
+        page5IdleAnimationInterval
+    );
+};
+
+const playPage5TransitionAnimation = async () => {
+    const frames = await preloadImages(
+        "/assets/screenFive/SCREEN5_INTRANSITION/screen5intransition_frame",
+        11
+    );
+    for (const frame of frames) {
+        page5TransitionImageSrc.value = frame;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+    }
 };
 
 watch(
@@ -307,6 +336,7 @@ watch(
             isScrollTextVisible.value = true;
             isPage4OutTransitioning.value = false;
             isPage4OutTransitionFinished.value = false;
+            isPage5TransitionFinished.value = false;
         }
     }
 );
@@ -364,6 +394,16 @@ watch(
                     v-if="page3TransitionImageSrc && !isPage3TransitionFinished"
                     :src="page3TransitionImageSrc"
                     alt="Page 3 Transition"
+                    class="w-full h-full object-cover"
+                />
+            </transition>
+        </div>
+        <div class="fixed top-0 left-0 w-full h-full">
+            <transition name="fade">
+                <img
+                    v-if="page5TransitionImageSrc && !isPage5TransitionFinished"
+                    :src="page5TransitionImageSrc"
+                    alt="Page 5 Transition"
                     class="w-full h-full object-cover"
                 />
             </transition>
@@ -443,6 +483,17 @@ watch(
                     class="w-full h-full object-cover"
                 />
             </transition>
+        </div>
+        <div
+            v-if="$route.path === '/counting'"
+            class="fixed top-0 left-0 w-full h-full"
+        >
+            <img
+                v-if="page5IdleImageSrc"
+                :src="page5IdleImageSrc"
+                alt="Page 5 Idle"
+                class="w-full h-full object-cover"
+            />
         </div>
     </div>
 </template>
