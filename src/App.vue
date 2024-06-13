@@ -29,8 +29,8 @@ const page5TransitionImageSrc = ref("");
 const isPage5TransitionFinished = ref(false);
 const page5IdleImageSrc = ref("");
 const loadingPercentage = ref(0);
-const totalFrames = ref(0);
-const loadedFrames = ref(0);
+const totalAssets = ref(0);
+const loadedAssets = ref(0);
 const isPage3FadingOut = ref(false);
 const isPage3FadingIn = ref(false);
 const isRsvpFadingOut = ref(false);
@@ -41,9 +41,9 @@ const preloadImage = (path) => {
         const img = new Image();
         img.onload = () => {
             console.log(`Loaded image: ${path}`);
-            loadedFrames.value++;
+            loadedAssets.value++;
             loadingPercentage.value = Math.floor(
-                (loadedFrames.value / totalFrames.value) * 100
+                (loadedAssets.value / totalAssets.value) * 100
             );
             resolve(path);
         };
@@ -58,7 +58,7 @@ const preloadImages = async (path, frames) => {
         const imagePath = `${path}${i.toString().padStart(4, "0")}.png`;
         imagePaths.push(imagePath);
     }
-    totalFrames.value += frames;
+    totalAssets.value += frames;
     const loadedImages = await Promise.all(
         imagePaths.map((path) => preloadImage(path))
     );
@@ -98,12 +98,12 @@ onMounted(async () => {
             15
         );
         console.log("Loading screen 3 idle image...");
-        totalFrames.value++;
+        totalAssets.value++;
         await preloadImage(
             "/assets/screenThree/SCREEN3_IDLE/screen3idle_frame0000.png"
         );
         console.log("Loading screen 4 idle image...");
-        totalFrames.value++;
+        totalAssets.value++;
         await preloadImage(
             "/assets/screenFour/screen4outtransition_frame0000.png"
         );
@@ -113,7 +113,7 @@ onMounted(async () => {
             11
         );
         console.log("Loading screen 5 idle image...");
-        totalFrames.value++;
+        totalAssets.value++;
         await preloadImage(
             "/assets/screenFive/SCREEN5_IDLE/screen5idle_frame0000.png"
         );
@@ -396,7 +396,7 @@ watch(
         </router-view>
         <div
             v-if="$route.path === '/time'"
-            class="fixed top-0 left-0 w-full h-full"
+            class="fixed top-0left-0 w-full h-full"
             @touchstart="handleTouchStart"
             @touchmove="handleTimePageTouchMove"
         >
@@ -471,14 +471,17 @@ html,
 body {
     background-color: #fff4e2;
 }
+
 .fade-enter-active,
 .fade-leave-active {
     transition: opacity 0.5s;
 }
+
 .fade-enter,
 .fade-leave-to {
     opacity: 0;
 }
+
 .loader {
     width: 48px;
     height: 48px;
@@ -489,6 +492,7 @@ body {
     box-sizing: border-box;
     animation: rotation 1s linear infinite;
 }
+
 @keyframes rotation {
     0% {
         transform: rotate(0deg);
