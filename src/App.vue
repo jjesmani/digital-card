@@ -36,31 +36,28 @@ const isPage5TransitionFinished = ref(false);
 const page5IdleImageSrc = ref("");
 let page5IdleAnimationInterval = null;
 
+const preloadImage = (path) => {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            console.log(`Loaded image: ${path}`);
+            resolve(path);
+        };
+        img.onerror = () => reject(new Error(`Failed to load image: ${path}`));
+        img.src = path;
+    });
+};
+
 const preloadImages = async (path, totalFrames) => {
     const imagePaths = [];
     for (let i = 0; i < totalFrames; i++) {
         const imagePath = `${path}${i.toString().padStart(4, "0")}.png`;
         imagePaths.push(imagePath);
     }
-    const imagePromises = imagePaths.map((path) => {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => {
-                console.log(`Loaded image: ${path}`);
-                resolve();
-            };
-            img.onerror = () =>
-                reject(new Error(`Failed to load image: ${path}`));
-            img.src = path;
-        });
-    });
-    try {
-        await Promise.all(imagePromises);
-        return imagePaths;
-    } catch (error) {
-        console.error("Error preloading images:", error);
-        return [];
-    }
+    const loadedImages = await Promise.all(
+        imagePaths.map((path) => preloadImage(path))
+    );
+    return loadedImages;
 };
 
 onMounted(async () => {
