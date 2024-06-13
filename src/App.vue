@@ -45,7 +45,10 @@ const preloadImages = async (path, totalFrames) => {
     const imagePromises = imagePaths.map((path) => {
         return new Promise((resolve, reject) => {
             const img = new Image();
-            img.onload = () => resolve();
+            img.onload = () => {
+                console.log(`Loaded image: ${path}`);
+                resolve();
+            };
             img.onerror = () =>
                 reject(new Error(`Failed to load image: ${path}`));
             img.src = path;
@@ -62,63 +65,64 @@ const preloadImages = async (path, totalFrames) => {
 
 onMounted(async () => {
     try {
-        const [
-            screenOneIdleFrames,
-            screenOneOutTransitionFrames,
-            screenTwoInTransitionFrames,
-            screenTwoIdleFrames,
-            screenTwoOutTransitionFrames,
-            screenThreeInTransitionFrames,
-            screenThreeIdleFrames,
-            screenThreeOutTransitionFrames,
-            screenFourOutTransitionFrames,
-            screenFiveInTransitionFrames,
-            screenFiveIdleFrames,
-        ] = await Promise.all([
-            preloadImages(
-                "/assets/screenOne/SCREEN1_IDLE/screen1idle_frame",
-                8
-            ),
-            preloadImages(
-                "/assets/screenOne/SCREEN1_OUTTRANSITION/screen1outtransition_frame",
-                12
-            ),
-            preloadImages(
-                "/assets/screenTwo/SCREEN2_INTRANSITION/screen2intransition_frame",
-                24
-            ),
-            preloadImages(
-                "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame",
-                8
-            ),
-            preloadImages(
-                "/assets/screenTwo/SCREEN2_OUTTRANSITION/screen2outtransition_frame",
-                11
-            ),
-            preloadImages(
-                "/assets/screenThree/SCREEN3_INTRANSITION/screen3intransition_frame",
-                15
-            ),
-            preloadImages(
-                "/assets/screenThree/SCREEN3_IDLE/screen3idle_frame",
-                7
-            ),
-            preloadImages(
-                "/assets/screenThree/SCREEN3_OUTTRANSITION/screen3outtransition_frame",
-                16
-            ),
-            preloadImages("/assets/screenFour/screen4outtransition_frame", 11),
-            preloadImages(
-                "/assets/screenFive/SCREEN5_INTRANSITION/screen5intransition_frame",
-                11
-            ),
-            preloadImages(
-                "/assets/screenFive/SCREEN5_IDLE/screen5idle_frame",
-                8
-            ),
-        ]);
+        console.log("Loading screen 1 idle animation frames...");
+        const screenOneIdleFrames = await preloadImages(
+            "/assets/screenOne/SCREEN1_IDLE/screen1idle_frame",
+            8
+        );
+        console.log("Loading screen 1 out transition frames...");
+        const screenOneOutTransitionFrames = await preloadImages(
+            "/assets/screenOne/SCREEN1_OUTTRANSITION/screen1outtransition_frame",
+            12
+        );
+        console.log("Loading screen 2 in transition frames...");
+        const screenTwoInTransitionFrames = await preloadImages(
+            "/assets/screenTwo/SCREEN2_INTRANSITION/screen2intransition_frame",
+            24
+        );
+        console.log("Loading screen 2 idle animation frames...");
+        const screenTwoIdleFrames = await preloadImages(
+            "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame",
+            8
+        );
+        console.log("Loading screen 2 out transition frames...");
+        const screenTwoOutTransitionFrames = await preloadImages(
+            "/assets/screenTwo/SCREEN2_OUTTRANSITION/screen2outtransition_frame",
+            11
+        );
+        console.log("Loading screen 3 in transition frames...");
+        const screenThreeInTransitionFrames = await preloadImages(
+            "/assets/screenThree/SCREEN3_INTRANSITION/screen3intransition_frame",
+            15
+        );
+        console.log("Loading screen 3 idle animation frames...");
+        const screenThreeIdleFrames = await preloadImages(
+            "/assets/screenThree/SCREEN3_IDLE/screen3idle_frame",
+            7
+        );
+        console.log("Loading screen 3 out transition frames...");
+        const screenThreeOutTransitionFrames = await preloadImages(
+            "/assets/screenThree/SCREEN3_OUTTRANSITION/screen3outtransition_frame",
+            16
+        );
+        console.log("Loading screen 4 out transition frames...");
+        const screenFourOutTransitionFrames = await preloadImages(
+            "/assets/screenFour/screen4outtransition_frame",
+            11
+        );
+        console.log("Loading screen 5 in transition frames...");
+        const screenFiveInTransitionFrames = await preloadImages(
+            "/assets/screenFive/SCREEN5_INTRANSITION/screen5intransition_frame",
+            11
+        );
+        console.log("Loading screen 5 idle animation frames...");
+        const screenFiveIdleFrames = await preloadImages(
+            "/assets/screenFive/SCREEN5_IDLE/screen5idle_frame",
+            8
+        );
 
         isLoading.value = false;
+        console.log("Loading complete.");
 
         // Start the initial animation
         startAnimation(screenOneIdleFrames, 100);
