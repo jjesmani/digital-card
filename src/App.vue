@@ -62,50 +62,61 @@ const preloadImages = async (path, totalFrames) => {
 
 onMounted(async () => {
     try {
-        const screenOneIdleFrames = await preloadImages(
-            "/assets/screenOne/SCREEN1_IDLE/screen1idle_frame",
-            8
-        );
-        const screenOneOutTransitionFrames = await preloadImages(
-            "/assets/screenOne/SCREEN1_OUTTRANSITION/screen1outtransition_frame",
-            12
-        );
-        const screenTwoInTransitionFrames = await preloadImages(
-            "/assets/screenTwo/SCREEN2_INTRANSITION/screen2intransition_frame",
-            24
-        );
-        const screenTwoIdleFrames = await preloadImages(
-            "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame",
-            8
-        );
-        const screenTwoOutTransitionFrames = await preloadImages(
-            "/assets/screenTwo/SCREEN2_OUTTRANSITION/screen2outtransition_frame",
-            11
-        );
-        const screenThreeInTransitionFrames = await preloadImages(
-            "/assets/screenThree/SCREEN3_INTRANSITION/screen3intransition_frame",
-            15
-        );
-        const screenThreeIdleFrames = await preloadImages(
-            "/assets/screenThree/SCREEN3_IDLE/screen3idle_frame",
-            7
-        );
-        const screenThreeOutTransitionFrames = await preloadImages(
-            "/assets/screenThree/SCREEN3_OUTTRANSITION/screen3outtransition_frame",
-            16
-        );
-        const screenFourOutTransitionFrames = await preloadImages(
-            "/assets/screenFour/screen4outtransition_frame",
-            11
-        );
-        const screenFiveInTransitionFrames = await preloadImages(
-            "/assets/screenFive/SCREEN5_INTRANSITION/screen5intransition_frame",
-            11
-        );
-        const screenFiveIdleFrames = await preloadImages(
-            "/assets/screenFive/SCREEN5_IDLE/screen5idle_frame",
-            8
-        );
+        const [
+            screenOneIdleFrames,
+            screenOneOutTransitionFrames,
+            screenTwoInTransitionFrames,
+            screenTwoIdleFrames,
+            screenTwoOutTransitionFrames,
+            screenThreeInTransitionFrames,
+            screenThreeIdleFrames,
+            screenThreeOutTransitionFrames,
+            screenFourOutTransitionFrames,
+            screenFiveInTransitionFrames,
+            screenFiveIdleFrames,
+        ] = await Promise.all([
+            preloadImages(
+                "/assets/screenOne/SCREEN1_IDLE/screen1idle_frame",
+                8
+            ),
+            preloadImages(
+                "/assets/screenOne/SCREEN1_OUTTRANSITION/screen1outtransition_frame",
+                12
+            ),
+            preloadImages(
+                "/assets/screenTwo/SCREEN2_INTRANSITION/screen2intransition_frame",
+                24
+            ),
+            preloadImages(
+                "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame",
+                8
+            ),
+            preloadImages(
+                "/assets/screenTwo/SCREEN2_OUTTRANSITION/screen2outtransition_frame",
+                11
+            ),
+            preloadImages(
+                "/assets/screenThree/SCREEN3_INTRANSITION/screen3intransition_frame",
+                15
+            ),
+            preloadImages(
+                "/assets/screenThree/SCREEN3_IDLE/screen3idle_frame",
+                7
+            ),
+            preloadImages(
+                "/assets/screenThree/SCREEN3_OUTTRANSITION/screen3outtransition_frame",
+                16
+            ),
+            preloadImages("/assets/screenFour/screen4outtransition_frame", 11),
+            preloadImages(
+                "/assets/screenFive/SCREEN5_INTRANSITION/screen5intransition_frame",
+                11
+            ),
+            preloadImages(
+                "/assets/screenFive/SCREEN5_IDLE/screen5idle_frame",
+                8
+            ),
+        ]);
 
         isLoading.value = false;
 
@@ -113,6 +124,7 @@ onMounted(async () => {
         startAnimation(screenOneIdleFrames, 100);
     } catch (error) {
         console.error("Error in onMounted:", error);
+        isLoading.value = false; // Set loading state to false in case of an error
     }
 });
 
