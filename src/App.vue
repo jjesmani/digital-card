@@ -28,12 +28,23 @@ const page2OutTransitionImageSrc = ref("");
 const page5TransitionImageSrc = ref("");
 const isPage5TransitionFinished = ref(false);
 const page5IdleImageSrc = ref("");
+const loadingPercentage = ref(0);
+const totalFrames = ref(0);
+const loadedFrames = ref(0);
+const isPage3FadingOut = ref(false);
+const isPage3FadingIn = ref(false);
+const isRsvpFadingOut = ref(false);
+const isPage5TransitionStarted = ref(false);
 
 const preloadImage = (path) => {
     return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
             console.log(`Loaded image: ${path}`);
+            loadedFrames.value++;
+            loadingPercentage.value = Math.floor(
+                (loadedFrames.value / totalFrames.value) * 100
+            );
             resolve(path);
         };
         img.onerror = () => reject(new Error(`Failed to load image: ${path}`));
@@ -41,12 +52,13 @@ const preloadImage = (path) => {
     });
 };
 
-const preloadImages = async (path, totalFrames) => {
+const preloadImages = async (path, frames) => {
     const imagePaths = [];
-    for (let i = 0; i < totalFrames; i++) {
+    for (let i = 0; i < frames; i++) {
         const imagePath = `${path}${i.toString().padStart(4, "0")}.png`;
         imagePaths.push(imagePath);
     }
+    totalFrames.value += frames;
     const loadedImages = await Promise.all(
         imagePaths.map((path) => preloadImage(path))
     );
@@ -86,10 +98,12 @@ onMounted(async () => {
             15
         );
         console.log("Loading screen 3 idle image...");
+        totalFrames.value++;
         await preloadImage(
             "/assets/screenThree/SCREEN3_IDLE/screen3idle_frame0000.png"
         );
         console.log("Loading screen 4 idle image...");
+        totalFrames.value++;
         await preloadImage(
             "/assets/screenFour/screen4outtransition_frame0000.png"
         );
@@ -99,6 +113,7 @@ onMounted(async () => {
             11
         );
         console.log("Loading screen 5 idle image...");
+        totalFrames.value++;
         await preloadImage(
             "/assets/screenFive/SCREEN5_IDLE/screen5idle_frame0000.png"
         );
@@ -235,7 +250,13 @@ const handleLocationPageTouchMove = async (event) => {
     const touchCurrentY = event.touches[0].clientY;
     const touchDiff = touchStartY.value - touchCurrentY;
     if (touchDiff > scrollThreshold) {
+        isPage3FadingOut.value = true;
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        isPage3FadingOut.value = false;
+        isPage3FadingIn.value = true;
         await navigateToRsvpPage();
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        isPage3FadingIn.value = false;
     }
 };
 
@@ -249,7 +270,10 @@ const handleRsvpPageTouchMove = async (event) => {
     const touchCurrentY = event.touches[0].clientY;
     const touchDiff = touchStartY.value - touchCurrentY;
     if (touchDiff > scrollThreshold) {
-        isRsvpIdleVisible.value = false; // Hide the RSVP idle image
+        isRsvpFadingOut.value = true;
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        isRsvpFadingOut.value = false;
+        isPage5TransitionStarted.value = true;
         await navigateToCountingPage();
     }
 };
@@ -289,6 +313,10 @@ watch(
             isScrollTextVisible.value = true;
             isPage5TransitionFinished.value = false;
             isRsvpIdleVisible.value = true; // Reset RSVP idle visibility
+            isPage3FadingOut.value = false;
+            isPage3FadingIn.value = false;
+            isRsvpFadingOut.value = false;
+            isPage5TransitionStarted.value = false;
         }
     }
 );
@@ -302,9 +330,12 @@ watch(
     >
         <div
             v-if="isLoading"
-            class="fixed z-50 inset-0 bg-[#FFF4E2] flex items-center justify-center"
+            class="fixed z-50 inset-0 bg-[#FFF4E2] flex items-center justify-center flex-col"
         >
-            <span class="text-brown-600">Loading...</span>
+            <span class="loader"></span>
+            <span class="text-brown-600 mt-4"
+                >Loading... {{ loadingPercentage }}%</span
+            >
         </div>
         <div v-else class="flex flex-col items-center justify-center w-full">
             <div class="flex items-center justify-center relative">
@@ -390,25 +421,37 @@ watch(
             @touchstart="handleTouchStart"
             @touchmove="handleLocationPageTouchMove"
         >
-            <img
-                v-if="page3IdleImageSrc"
-                :src="page3IdleImageSrc"
-                alt="Page 3 Idle"
-                class="w-full h-full object-cover"
-            />
+            <transition name="fade">
+                <img
+                    v-if="
+                        page3IdleImageSrc &&
+                        !isPage3FadingOut &&
+                        !isPage3FadingIn
+                    "
+                    :src="page3IdleImageSrc"
+                    alt="Page 3 Idle"
+                    class="w-full h-full object-cover"
+                />
+            </transition>
         </div>
         <div
             v-if="$route.path === '/rsvp'"
-            class="fixed top-0 left0 w-full h-full"
+            class="fixed top-0 left-0 w-full h-full"
             @touchstart="handleTouchStart"
             @touchmove="handleRsvpPageTouchMove"
         >
-            <img
-                v-if="rsvpIdleImageSrc && isRsvpIdleVisible"
-                :src="rsvpIdleImageSrc"
-                alt="RSVP Idle"
-                class="w-full h-full object-cover"
-            />
+            <transition name="fade">
+                <img
+                    v-if="
+                        rsvpIdleImageSrc &&
+                        !isRsvpFadingOut &&
+                        !isPage5TransitionStarted
+                    "
+                    :src="rsvpIdleImageSrc"
+                    alt="RSVP Idle"
+                    class="w-full h-full object-cover"
+                />
+            </transition>
         </div>
         <div
             v-if="$route.path === '/counting'"
@@ -428,14 +471,30 @@ html,
 body {
     background-color: #fff4e2;
 }
-
 .fade-enter-active,
 .fade-leave-active {
-    transition: opacity 0.3s;
+    transition: opacity 0.5s;
 }
-
 .fade-enter,
 .fade-leave-to {
     opacity: 0;
+}
+.loader {
+    width: 48px;
+    height: 48px;
+    border: 5px solid #9a7373;
+    border-bottom-color: transparent;
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+}
+@keyframes rotation {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 </style>
