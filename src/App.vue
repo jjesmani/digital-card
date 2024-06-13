@@ -3,9 +3,7 @@ import { ref, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
-const currentFrame = ref(0);
 const imageSrc = ref("");
-const images = ref([]);
 const isIdleVisible = ref(true);
 const isTransitionFinished = ref(false);
 const touchStartY = ref(0);
@@ -17,7 +15,6 @@ const page2IdleImageSrc = ref("");
 const isPage2OutTransitionFinished = ref(false);
 const isPage2OutTransitioning = ref(false);
 const isPage2IdleVisible = ref(true);
-let page2IdleAnimationInterval = null;
 const page3TransitionImageSrc = ref("");
 const isPage3TransitionFinished = ref(false);
 const page3IdleImageSrc = ref("");
@@ -29,7 +26,7 @@ const page5TransitionImageSrc = ref("");
 const isPage5TransitionFinished = ref(false);
 const page5IdleImageSrc = ref("");
 const loadingPercentage = ref(0);
-const totalAssets = ref(0);
+const totalAssets = 78;
 const loadedAssets = ref(0);
 const isPage3FadingOut = ref(false);
 const isPage3FadingIn = ref(false);
@@ -43,7 +40,7 @@ const preloadImage = (path) => {
             console.log(`Loaded image: ${path}`);
             loadedAssets.value++;
             loadingPercentage.value = Math.floor(
-                (loadedAssets.value / totalAssets.value) * 100
+                (loadedAssets.value / totalAssets) * 100
             );
             resolve(path);
         };
@@ -58,7 +55,6 @@ const preloadImages = async (path, frames) => {
         const imagePath = `${path}${i.toString().padStart(4, "0")}.png`;
         imagePaths.push(imagePath);
     }
-    totalAssets.value += frames;
     const loadedImages = await Promise.all(
         imagePaths.map((path) => preloadImage(path))
     );
@@ -67,11 +63,6 @@ const preloadImages = async (path, frames) => {
 
 onMounted(async () => {
     try {
-        console.log("Loading screen 1 idle animation frames...");
-        const screenOneIdleFrames = await preloadImages(
-            "/assets/screenOne/SCREEN1_IDLE/screen1idle_frame",
-            8
-        );
         console.log("Loading screen 1 out transition frames...");
         const screenOneOutTransitionFrames = await preloadImages(
             "/assets/screenOne/SCREEN1_OUTTRANSITION/screen1outtransition_frame",
@@ -81,11 +72,6 @@ onMounted(async () => {
         const screenTwoInTransitionFrames = await preloadImages(
             "/assets/screenTwo/SCREEN2_INTRANSITION/screen2intransition_frame",
             24
-        );
-        console.log("Loading screen 2 idle animation frames...");
-        const screenTwoIdleFrames = await preloadImages(
-            "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame",
-            8
         );
         console.log("Loading screen 2 out transition frames...");
         const screenTwoOutTransitionFrames = await preloadImages(
@@ -98,12 +84,10 @@ onMounted(async () => {
             15
         );
         console.log("Loading screen 3 idle image...");
-        totalAssets.value++;
         await preloadImage(
             "/assets/screenThree/SCREEN3_IDLE/screen3idle_frame0000.png"
         );
         console.log("Loading screen 4 idle image...");
-        totalAssets.value++;
         await preloadImage(
             "/assets/screenFour/screen4outtransition_frame0000.png"
         );
@@ -113,28 +97,31 @@ onMounted(async () => {
             11
         );
         console.log("Loading screen 5 idle image...");
-        totalAssets.value++;
         await preloadImage(
             "/assets/screenFive/SCREEN5_IDLE/screen5idle_frame0000.png"
         );
 
+        console.log("Loading screen 1 idle image...");
+        await preloadImage(
+            "/assets/screenOne/SCREEN1_IDLE/screen1idle_frame0007.png"
+        );
+        imageSrc.value =
+            "/assets/screenOne/SCREEN1_IDLE/screen1idle_frame0007.png";
+
+        console.log("Loading screen 2 idle image...");
+        await preloadImage(
+            "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame0007.png"
+        );
+        page2IdleImageSrc.value =
+            "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame0007.png";
+
         isLoading.value = false;
         console.log("Loading complete.");
-
-        // Start the initial animation
-        startAnimation(screenOneIdleFrames, 100);
     } catch (error) {
         console.error("Error in onMounted:", error);
         isLoading.value = false; // Set loading state to false in case of an error
     }
 });
-
-const startAnimation = (frames, interval) => {
-    setInterval(() => {
-        currentFrame.value = (currentFrame.value + 1) % frames.length;
-        imageSrc.value = frames[currentFrame.value];
-    }, interval);
-};
 
 const handleTouchStart = (event) => {
     touchStartY.value = event.touches[0].clientY;
@@ -176,33 +163,6 @@ const navigateToNextPage = async () => {
     );
     isTransitionFinished.value = true; // Set isTransitionFinished to true after transition
     router.push("/time");
-    page2IdleImageSrc.value = await startIdleAnimation(
-        "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame",
-        8,
-        200,
-        page2IdleAnimationInterval
-    );
-};
-
-const startIdleAnimation = async (
-    path,
-    totalFrames,
-    interval,
-    animationInterval
-) => {
-    const frames = await preloadImages(path, totalFrames);
-    let frameIndex = 0;
-    animationInterval = setInterval(() => {
-        frameIndex = (frameIndex + 1) % frames.length;
-        if (path.includes("SCREEN2")) {
-            page2IdleImageSrc.value = frames[frameIndex];
-        }
-    }, interval);
-    return frames[frameIndex];
-};
-
-const stopIdleAnimation = () => {
-    clearInterval(page2IdleAnimationInterval);
 };
 
 const handleTimePageTouchMove = async (event) => {
@@ -212,7 +172,6 @@ const handleTimePageTouchMove = async (event) => {
         if (touchDiff > scrollThreshold) {
             isPage2OutTransitioning.value = true;
             isPage2IdleVisible.value = false;
-            stopIdleAnimation();
             await playPage2OutTransitionAnimation();
             isPage2OutTransitionFinished.value = true;
             await navigateToLocationPage();
@@ -301,8 +260,6 @@ watch(
     () => router.currentRoute.value,
     (newRoute) => {
         if (newRoute.path === "/") {
-            currentFrame.value = 0;
-            imageSrc.value = images.value[0];
             window.scrollTo(0, 0);
             isTransitioning.value = false;
             isTransitionFinished.value = false;
@@ -396,7 +353,7 @@ watch(
         </router-view>
         <div
             v-if="$route.path === '/time'"
-            class="fixed top-0left-0 w-full h-full"
+            class="fixed top-0 left-0 w-full h-full"
             @touchstart="handleTouchStart"
             @touchmove="handleTimePageTouchMove"
         >
