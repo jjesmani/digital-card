@@ -5,7 +5,6 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 const currentFrame = ref(0);
 const imageSrc = ref("");
-const images = ref([]);
 const isIdleVisible = ref(true);
 const isTransitionFinished = ref(false);
 const touchStartY = ref(0);
@@ -72,51 +71,6 @@ onMounted(async () => {
             "/assets/screenOne/SCREEN1_OUTTRANSITION/screen1outtransition_frame",
             12
         );
-        console.log("Loading screen 2 in transition frames...");
-        const screenTwoInTransitionFrames = await preloadImages(
-            "/assets/screenTwo/SCREEN2_INTRANSITION/screen2intransition_frame",
-            24
-        );
-        console.log("Loading screen 2 idle animation frames...");
-        const screenTwoIdleFrames = await preloadImages(
-            "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame",
-            8
-        );
-        console.log("Loading screen 2 out transition frames...");
-        const screenTwoOutTransitionFrames = await preloadImages(
-            "/assets/screenTwo/SCREEN2_OUTTRANSITION/screen2outtransition_frame",
-            11
-        );
-        console.log("Loading screen 3 in transition frames...");
-        const screenThreeInTransitionFrames = await preloadImages(
-            "/assets/screenThree/SCREEN3_INTRANSITION/screen3intransition_frame",
-            15
-        );
-        console.log("Loading screen 3 idle animation frames...");
-        const screenThreeIdleFrames = await preloadImages(
-            "/assets/screenThree/SCREEN3_IDLE/screen3idle_frame",
-            7
-        );
-        console.log("Loading screen 3 out transition frames...");
-        const screenThreeOutTransitionFrames = await preloadImages(
-            "/assets/screenThree/SCREEN3_OUTTRANSITION/screen3outtransition_frame",
-            16
-        );
-        console.log("Loading screen 4 out transition frames...");
-        const screenFourOutTransitionFrames = await preloadImages(
-            "/assets/screenFour/screen4outtransition_frame",
-            11
-        );
-        console.log("Loading screen 5 in transition frames...");
-        const screenFiveInTransitionFrames = await preloadImages(
-            "/assets/screenFive/SCREEN5_INTRANSITION/screen5intransition_frame",
-            11
-        );
-        console.log("Loading screen 5 idle animation frames...");
-        const screenFiveIdleFrames = await preloadImages(
-            "/assets/screenFive/SCREEN5_IDLE/screen5idle_frame",
-            8
-        );
 
         isLoading.value = false;
         console.log("Loading complete.");
@@ -125,7 +79,7 @@ onMounted(async () => {
         startAnimation(screenOneIdleFrames, 100);
     } catch (error) {
         console.error("Error in onMounted:", error);
-        isLoading.value = false; // Set loading state to false in case of an error
+        isLoading.value = false;
     }
 });
 
@@ -168,13 +122,31 @@ const playTransitionAnimation = async (path, totalFrames, interval) => {
 };
 
 const navigateToNextPage = async () => {
-    isTransitionFinished.value = false; // Reset isTransitionFinished
+    isTransitionFinished.value = false;
+
+    // Load assets for Screen 2
+    console.log("Loading screen 2 in transition frames...");
+    const screenTwoInTransitionFrames = await preloadImages(
+        "/assets/screenTwo/SCREEN2_INTRANSITION/screen2intransition_frame",
+        24
+    );
+    console.log("Loading screen 2 idle animation frames...");
+    const screenTwoIdleFrames = await preloadImages(
+        "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame",
+        8
+    );
+    console.log("Loading screen 2 out transition frames...");
+    const screenTwoOutTransitionFrames = await preloadImages(
+        "/assets/screenTwo/SCREEN2_OUTTRANSITION/screen2outtransition_frame",
+        11
+    );
+
     await playTransitionAnimation(
         "/assets/screenTwo/SCREEN2_INTRANSITION/screen2intransition_frame",
         24,
         80
     );
-    isTransitionFinished.value = true; // Set isTransitionFinished to true after transition
+    isTransitionFinished.value = true;
     router.push("/time");
     page2IdleImageSrc.value = await startIdleAnimation(
         "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame",
@@ -238,11 +210,24 @@ const playPage2OutTransitionAnimation = async () => {
 };
 
 const navigateToLocationPage = async () => {
-    const page3TransitionFrames = await preloadImages(
+    // Load assets for Screen 3
+    console.log("Loading screen 3 in transition frames...");
+    const screenThreeInTransitionFrames = await preloadImages(
         "/assets/screenThree/SCREEN3_INTRANSITION/screen3intransition_frame",
         15
     );
-    for (const frame of page3TransitionFrames) {
+    console.log("Loading screen 3 idle animation frames...");
+    const screenThreeIdleFrames = await preloadImages(
+        "/assets/screenThree/SCREEN3_IDLE/screen3idle_frame",
+        7
+    );
+    console.log("Loading screen 3 out transition frames...");
+    const screenThreeOutTransitionFrames = await preloadImages(
+        "/assets/screenThree/SCREEN3_OUTTRANSITION/screen3outtransition_frame",
+        16
+    );
+
+    for (const frame of screenThreeInTransitionFrames) {
         page3TransitionImageSrc.value = frame;
         await new Promise((resolve) => setTimeout(resolve, 80));
     }
@@ -283,6 +268,13 @@ const playPage3OutTransitionAnimation = async () => {
 };
 
 const navigateToRsvpPage = async () => {
+    // Load assets for Screen 4
+    console.log("Loading screen 4 out transition frames...");
+    const screenFourOutTransitionFrames = await preloadImages(
+        "/assets/screenFour/screen4outtransition_frame",
+        11
+    );
+
     router.push("/rsvp");
 };
 
@@ -311,6 +303,18 @@ const playPage4OutTransitionAnimation = async () => {
 };
 
 const navigateToCountingPage = async () => {
+    // Load assets for Screen 5
+    console.log("Loading screen 5 in transition frames...");
+    const screenFiveInTransitionFrames = await preloadImages(
+        "/assets/screenFive/SCREEN5_INTRANSITION/screen5intransition_frame",
+        11
+    );
+    console.log("Loading screen 5 idle animation frames...");
+    const screenFiveIdleFrames = await preloadImages(
+        "/assets/screenFive/SCREEN5_IDLE/screen5idle_frame",
+        8
+    );
+
     await playPage5TransitionAnimation();
     isPage5TransitionFinished.value = true;
     router.push("/counting");
@@ -338,7 +342,7 @@ watch(
     (newRoute) => {
         if (newRoute.path === "/") {
             currentFrame.value = 0;
-            imageSrc.value = images.value[0];
+            imageSrc.value = "";
             window.scrollTo(0, 0);
             isTransitioning.value = false;
             isTransitionFinished.value = false;
@@ -510,6 +514,7 @@ watch(
         </div>
     </div>
 </template>
+
 <style>
 html,
 body {
