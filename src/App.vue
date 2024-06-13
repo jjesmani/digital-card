@@ -37,7 +37,6 @@ const preloadImage = (path) => {
     return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
-            console.log(`Loaded image: ${path}`);
             loadedAssets.value++;
             loadingPercentage.value = Math.floor(
                 (loadedAssets.value / totalAssets) * 100
@@ -63,52 +62,42 @@ const preloadImages = async (path, frames) => {
 
 onMounted(async () => {
     try {
-        console.log("Loading screen 1 out transition frames...");
         const screenOneOutTransitionFrames = await preloadImages(
             "/assets/screenOne/SCREEN1_OUTTRANSITION/screen1outtransition_frame",
             12
         );
-        console.log("Loading screen 2 in transition frames...");
         const screenTwoInTransitionFrames = await preloadImages(
             "/assets/screenTwo/SCREEN2_INTRANSITION/screen2intransition_frame",
             24
         );
-        console.log("Loading screen 2 out transition frames...");
         const screenTwoOutTransitionFrames = await preloadImages(
             "/assets/screenTwo/SCREEN2_OUTTRANSITION/screen2outtransition_frame",
             11
         );
-        console.log("Loading screen 3 in transition frames...");
         const screenThreeInTransitionFrames = await preloadImages(
             "/assets/screenThree/SCREEN3_INTRANSITION/screen3intransition_frame",
             15
         );
-        console.log("Loading screen 3 idle image...");
         await preloadImage(
             "/assets/screenThree/SCREEN3_IDLE/screen3idle_frame0000.png"
         );
-        console.log("Loading screen 4 idle image...");
         await preloadImage(
             "/assets/screenFour/screen4outtransition_frame0000.png"
         );
-        console.log("Loading screen 5 in transition frames...");
         const screenFiveInTransitionFrames = await preloadImages(
             "/assets/screenFive/SCREEN5_INTRANSITION/screen5intransition_frame",
             11
         );
-        console.log("Loading screen 5 idle image...");
         await preloadImage(
             "/assets/screenFive/SCREEN5_IDLE/screen5idle_frame0000.png"
         );
 
-        console.log("Loading screen 1 idle image...");
         await preloadImage(
             "/assets/screenOne/SCREEN1_IDLE/screen1idle_frame0007.png"
         );
         imageSrc.value =
             "/assets/screenOne/SCREEN1_IDLE/screen1idle_frame0007.png";
 
-        console.log("Loading screen 2 idle image...");
         await preloadImage(
             "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame0007.png"
         );
@@ -116,10 +105,9 @@ onMounted(async () => {
             "/assets/screenTwo/SCREEN2_IDLE/screen2idle_frame0007.png";
 
         isLoading.value = false;
-        console.log("Loading complete.");
     } catch (error) {
         console.error("Error in onMounted:", error);
-        isLoading.value = false; // Set loading state to false in case of an error
+        isLoading.value = false;
     }
 });
 
@@ -155,13 +143,13 @@ const playTransitionAnimation = async (path, totalFrames, interval) => {
 };
 
 const navigateToNextPage = async () => {
-    isTransitionFinished.value = false; // Reset isTransitionFinished
+    isTransitionFinished.value = false;
     await playTransitionAnimation(
         "/assets/screenTwo/SCREEN2_INTRANSITION/screen2intransition_frame",
         24,
         80
     );
-    isTransitionFinished.value = true; // Set isTransitionFinished to true after transition
+    isTransitionFinished.value = true;
     router.push("/time");
 };
 
@@ -269,7 +257,7 @@ watch(
             isIdleVisible.value = true;
             isScrollTextVisible.value = true;
             isPage5TransitionFinished.value = false;
-            isRsvpIdleVisible.value = true; // Reset RSVP idle visibility
+            isRsvpIdleVisible.value = true;
             isPage3FadingOut.value = false;
             isPage3FadingIn.value = false;
             isRsvpFadingOut.value = false;
@@ -423,6 +411,7 @@ watch(
         </div>
     </div>
 </template>
+
 <style>
 html,
 body {
